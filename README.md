@@ -1,6 +1,6 @@
 OCP Admin Console
 =================
-Thick client GUI for administrative tasks on the Open Content Platform.
+Python-based graphical user interface for administrative tasks on the Open Content Platform.
 
 Details
 -------
