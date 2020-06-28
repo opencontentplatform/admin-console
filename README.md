@@ -10,9 +10,9 @@ The admin console leverages wxPython (https://wxpython.org/) to expose a graphic
 
 Installation
 ------------
-  * pip install wx
+  * Add wxPython to your Python environment: pip install wx
   * Download this repo
-  * Edit the ./admin-console/ocpSettings.json file to set the OCP endpoint the API user/key
+  * Edit the ./admin-console/ocpSettings.json file to set the OCP endpoint and API user/key
   * Start it up: python ./admin-console/adminConsole.py
 
 Community Forum
