@@ -1,0 +1,18 @@
+{
+	"adminConsole" : {
+		"fileName" : "adminConsole.log",
+		"maxSizeInBytes" : "1024000",
+		"maxRollovers" : "10",
+		"logLevel" : "DEBUG",
+		"lineFormat" : "%(asctime)s  %(levelname)-7s %(filename)-21s  %(message)s",
+		"dateFormat" : "%Y-%m-%d %H:%M:%S"
+	},
+	"ocpRestAPI" : {
+		"fileName" : "ocpRestAPI.log",
+		"maxSizeInBytes" : "1024000",
+		"maxRollovers" : "10",
+		"logLevel" : "DEBUG",
+		"lineFormat" : "%(asctime)s  %(levelname)-7s %(filename)-21s  %(message)s",
+		"dateFormat" : "%Y-%m-%d %H:%M:%S"
+	}
+}
