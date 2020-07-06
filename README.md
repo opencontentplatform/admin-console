@@ -12,7 +12,7 @@ Installation
 ------------
   * Add wxPython to your Python environment: pip install wxpython
   * Download this repo
-  * Edit the ./admin-console/ocpSettings.json file to set the OCP endpoint and API user/key
+  * Edit the ./admin-console/conf/ocpSettings.json file to set the OCP endpoint and API user/key
   * Start it up: python ./admin-console/adminConsole.py
 
 Community Forum
