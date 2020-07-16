@@ -234,7 +234,7 @@ class Main():
 		self.deleteButton = None
 		self.leftPanelStaticBox = None
 		self.logger.debug('Main.init: 1')
-		
+
 		self.groupNames = {}
 		self.groupData = {}
 		self.realms = []
@@ -248,7 +248,7 @@ class Main():
 			self.currentRealmId = 0
 			if len(self.groupNames.get(self.currentRealm, [])) > 0:
 				self.currentGroup = self.groupNames.get(self.currentRealm)[0]
-		
+
 		self.logger.debug('Main.init: 2')
 
 		self.leftPanelStaticBox = wx.StaticBox(self.thisPanel, wx.ID_ANY, "Config Groups")
@@ -267,15 +267,15 @@ class Main():
 		self.leftPanelStaticBox.Bind(wx.EVT_BUTTON, self.OnDeleteRealmButton, self.deleteRealmButton)
 
 		self.listPanel = ListCtrlPanel(self.leftPanelStaticBox, self.logger, self.api, self)
-		
+
 		self.listPanelSizer = wx.BoxSizer(wx.HORIZONTAL)
 		self.listPanelSizer.Add(self.listPanel, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
 		#self.leftSizer.Insert(3, self.listPanelSizer, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
-		
+
 		self.mainQueryBox = wx.BoxSizer(wx.VERTICAL)
 		self.mainQueryBox.AddSpacer(2)
 		self.mainQueryBox.Add(self.leftPanelStaticBox, 2, wx.LEFT|wx.BOTTOM, 5)
-		
+
 		topBorder, otherBorder = self.leftPanelStaticBox.GetBordersForSizer()
 		self.leftSizer = wx.BoxSizer(wx.VERTICAL)
 		self.leftSizer.AddSpacer(topBorder + 3)
@@ -284,7 +284,7 @@ class Main():
 
 		self.leftSizer.Add(self.listPanelSizer, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
 		self.leftSizer.AddSpacer(20)
-		
+
 		self.leftSizer.Add(self.insertButton, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
 		self.leftSizer.AddSpacer(10)
 		self.leftSizer.Add(self.updateButton, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
@@ -297,7 +297,7 @@ class Main():
 		self.leftPanelStaticBox.SetSizer(self.leftSizer)
 		## Placeholder for when we known how to create an TextCtrl
 		self.textCtrl = RawPanel(self.thisPanel, wx.ID_ANY)
-		
+
 		self.mainBox = wx.BoxSizer(wx.HORIZONTAL)
 		self.mainBox.Add(self.mainQueryBox, 0, wx.TOP|wx.LEFT|wx.BOTTOM, 5)
 		self.mainBox.Add(self.textCtrl, 1, wx.EXPAND|wx.ALL, 15)
@@ -311,13 +311,13 @@ class Main():
 	def resetMainPanel(self, preserve=True):
 		self.logger.debug('Start resetMainPanel')
 		self.thisPanel.Freeze()
-		
+
 		## Get current dataSet to display in the textCtl pane on the right
 		self.logger.debug('resetMainPanel: currentRealm: {}'.format(self.currentRealm))
 		self.logger.debug('resetMainPanel: currentGroup: {}'.format(self.currentGroup))
 		self.logger.debug('resetMainPanel: groupData: {}'.format(self.groupData))
 		dataSet = self.groupData.get(self.currentRealm, {}).get(self.currentGroup)
-		
+
 		## Replace the textCtrl pane on the right
 		self.mainBox.Detach(self.textCtrl)
 		self.textCtrl.Destroy()
@@ -328,7 +328,7 @@ class Main():
 		else:
 			self.textCtrl = RawPanel(self.thisPanel, wx.ID_ANY)
 		self.mainBox.Add(self.textCtrl, 1, wx.EXPAND|wx.ALL, 15)
-		
+
 		if not preserve:
 			## Conditionally replace the config group list on the left
 			newListPanel = ListCtrlPanel(self.leftPanelStaticBox, self.logger, self.api, self)
@@ -457,7 +457,7 @@ class Main():
 			if groupData is None or groupData == '':
 				self.logger.debug('OnInsertButton: nothing to insert')
 				return
-			dataAsDict = json.loads(osData)
+			dataAsDict = json.loads(groupData)
 			data['content'] = dataAsDict
 			data['source'] = 'admin console'
 			self.logger.debug('OnUpdateButton: value == OK')
@@ -493,8 +493,8 @@ class Main():
 		self.logger.debug('OnDeleteGroupButton: currentRealm: {}'.format(self.currentRealm))
 		self.logger.debug('OnDeleteGroupButton: currentGroup: {}'.format(self.currentGroup))
 		self.logger.debug('OnDeleteGroupButton: realm data: {}'.format(self.groupData[self.currentRealm]))
-		
-		
+
+
 		dlgDelete = wx.MessageDialog(self.thisPanel, 'Are you sure you want to delete group {}?'.format(self.currentGroup), 'Delete cred {}'.format(self.currentGroup), wx.OK|wx.CANCEL|wx.ICON_QUESTION)
 		dlgDelete.CenterOnScreen()
 		value = dlgDelete.ShowModal()
@@ -529,7 +529,7 @@ class Main():
 
 
 	def OnDeleteRealmButton(self, event=None):
-		
+
 		dlgDelete = wx.MessageDialog(self.thisPanel, 'Are you sure you want to delete all entries in the {} realm?'.format(self.currentRealm), 'Delete realm {}'.format(self.currentRealm), wx.OK|wx.CANCEL|wx.ICON_QUESTION)
 		dlgDelete.CenterOnScreen()
 		value = dlgDelete.ShowModal()
@@ -565,4 +565,4 @@ class Main():
 			stacktrace = traceback.format_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2])
 			self.logger.debug('Failure in OnDeleteRealmButton: {}'.format(stacktrace))
 		wx.EndBusyCursor()
-		
+
