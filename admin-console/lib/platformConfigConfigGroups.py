@@ -282,7 +282,7 @@ class Main():
 		self.leftSizer.Add(self.rbRealm, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
 		self.leftSizer.AddSpacer(8)
 
-		self.leftSizer.Add(self.listPanelSizer, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
+		self.leftSizer.Add(self.listPanelSizer, 1, wx.EXPAND)
 		self.leftSizer.AddSpacer(20)
 
 		self.leftSizer.Add(self.insertButton, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
@@ -337,7 +337,7 @@ class Main():
 			self.listPanel = newListPanel
 			self.listPanelSizer = wx.BoxSizer(wx.HORIZONTAL)
 			self.listPanelSizer.Add(self.listPanel, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
-			self.leftSizer.Insert(3, self.listPanelSizer, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
+			self.leftSizer.Insert(3, self.listPanelSizer, wx.EXPAND)
 			self.leftSizer.Layout()
 			self.leftPanelStaticBox.Layout()
 			## setCurrentItem will call resetMainPanel again, for force resizing
