@@ -33,8 +33,6 @@ class Page2(wx.Panel):
 		## pubsub stuff
 		pub.subscribe(self.__onObjectSelection, 'object.definition')
 
-	# @sub
-	# def on_objectDefinition(self, objType, objDef=None):
 	def __onObjectSelection(self, objType, objDef=None):
 		self.logger.debug('Page2: __onObjectSelection: received objType {} and objDef {}'.format(objType, objDef))
 		self.objectType = objType
@@ -252,21 +250,10 @@ class Page1(wx.Panel):
 		selection.SetFont(font)
 		hbox.Add(selection, 0, wx.LEFT|wx.RIGHT|wx.EXPAND, 20)
 		self.activeChoice = wx.Choice(self, wx.ID_ANY, (100, -1), choices=self.objectTypes)
-		#self.activeChoice.SetSelection(0)
 		self.activeChoice.SetFont(font)
 		self.Bind(wx.EVT_CHOICE, self.EvtChooseEnabled, self.activeChoice)
 		hbox.Add(self.activeChoice)
 		vbox.Add(hbox, 0)
-		#vbox.AddSpacer(40)
-
-		# btn = wx.Button(self, label="Next")
-		# btn.SetFont(font)
-		# self.Bind(wx.EVT_BUTTON, onNextPage, btn)
-		# vbox.Add(btn, 0, wx.LEFT|wx.RIGHT|wx.ALIGN_LEFT, 20)
-		# btn.SetDefault()
-		# btn.SetFocus()
-
-		#vbox.AddStretchSpacer()
 		mainBox.Add(vbox, 1, wx.EXPAND|wx.RIGHT, 60)
 		self.SetSizer(mainBox)
 

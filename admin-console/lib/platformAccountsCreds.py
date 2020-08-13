@@ -1348,7 +1348,7 @@ class Main():
 			self.leftPanelStaticBox = wx.StaticBox(self.parentPanel, wx.ID_ANY, "Credentials")
 			self.rb = wx.RadioBox(self.leftPanelStaticBox, wx.ID_ANY, 'Protocol Type', wx.DefaultPosition, wx.DefaultSize, self.protocolNames, 1, wx.RA_SPECIFY_COLS)
 			self.leftPanelStaticBox.Bind(wx.EVT_RADIOBOX, self.EvtRadioBox, self.rb)
-			self.rb.SetToolTip(wx.ToolTip('Select a Realm'))
+			self.rb.SetToolTip(wx.ToolTip('Select a Protocol'))
 			self.insertCredButton = wx.Button(self.leftPanelStaticBox, wx.ID_ANY, 'Insert')
 			self.leftPanelStaticBox.Bind(wx.EVT_BUTTON, self.OnInsertCredButton, self.insertCredButton)
 			self.updateCredButton = wx.Button(self.leftPanelStaticBox, wx.ID_ANY, 'Update')

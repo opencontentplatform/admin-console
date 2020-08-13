@@ -33,6 +33,11 @@ import dataModelsDeleteMetaData
 import dataModelsViews
 import dataModelsHistory
 import dataModelsMetaDataHistory
+import jobViewListing
+import jobViewStatistics
+#import jobViewSchedules
+#import jobModifyToggle
+#import jobModifyManage
 import ocpRestAPI
 
 ## Constants for ribbon buttons
@@ -219,7 +224,7 @@ class MainFrame(wx.Frame):
 		jobs_view_panel = RB.RibbonPanel(jobs, wx.ID_ANY, "View", wx.NullBitmap, wx.DefaultPosition, wx.DefaultSize,
 										agwStyle=RB.RIBBON_PANEL_NO_AUTO_MINIMISE)
 		jobs_view_selection = RB.RibbonButtonBar(jobs_view_panel, wx.ID_ANY)
-		jobs_view_selection.AddSimpleButton(ID_JOBS_LIST, "Listing", CreateBitmap("TextList"), "Job statistics")
+		jobs_view_selection.AddSimpleButton(ID_JOBS_LIST, "Listing", CreateBitmap("TextList"), "Job listing")
 		jobs_view_selection.AddSimpleButton(ID_JOBS_STATS, "Statistics", CreateBitmap("Info"), "Job statistics")
 		jobs_view_selection.AddSimpleButton(ID_JOBS_SCHEDULE, "Schedules", CreateBitmap("DateTime"), "View job schedules")
 		## Panel: Jobs.Modify
@@ -465,22 +470,32 @@ class MainFrame(wx.Frame):
 	def OnSelectionJobList(self, event):
 		self.logger.debug("Job Lists button clicked.")
 		self.resetRawPanel()
+		wx.BeginBusyCursor()
+		jobViewListing.Main(self.rawPanel, self.logger, self.api)
 
 	def OnSelectionJobStats(self, event):
 		self.logger.debug("Job Stats button clicked.")
 		self.resetRawPanel()
+		wx.BeginBusyCursor()
+		jobViewStatistics.Main(self.rawPanel, self.logger, self.api)
 
 	def OnSelectionJobSchedules(self, event):
 		self.logger.debug("Job Schedules button clicked.")
 		self.resetRawPanel()
+		#wx.BeginBusyCursor()
+		#jobViewSchedules.Main(self.rawPanel, self.logger, self.api)
 
 	def OnSelectionJobToggle(self, event):
 		self.logger.debug("Job Toggle button clicked.")
 		self.resetRawPanel()
+		#wx.BeginBusyCursor()
+		#jobModifyToggle.Main(self.rawPanel, self.logger, self.api)
 
 	def OnSelectionJobEdit(self, event):
 		self.logger.debug("Job Edit button clicked.")
 		self.resetRawPanel()
+		#wx.BeginBusyCursor()
+		#jobModifyManage.Main(self.rawPanel, self.logger, self.api)
 
 
 	def OnTogglePanels(self, event):
@@ -527,7 +542,7 @@ def main():
 		#app = wx.App(redirect=True)
 		app = wx.App()
 		window = MainFrame(None, -1, "ITDM Admin console", log=logger, api=restApi)
-		
+
 		## Start the event loop
 		app.MainLoop()
 
