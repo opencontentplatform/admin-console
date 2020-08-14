@@ -18,7 +18,7 @@ class ObjectListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 
 
 class ResultListCtrlPanel(wx.Panel, listmix.ColumnSorterMixin):
-	def __init__(self, parent, log, jobDetails, columns, headers):
+	def __init__(self, parent, log, jobDetails, columns, headers, columnStaticWidthDict={}):
 		wx.Panel.__init__(self, parent, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, style=wx.EXPAND|wx.CLIP_CHILDREN)
 		self.logger = log
 		self.logger.debug('Inside ResultListCtrlPanel')
@@ -27,6 +27,7 @@ class ResultListCtrlPanel(wx.Panel, listmix.ColumnSorterMixin):
 		self.dataToPopulate = {}
 		self.columns = columns
 		self.headers = headers
+		self.columnStaticWidthDict = columnStaticWidthDict
 		self.formatDataForView()
 		self.list = ObjectListCtrl(self, wx.ID_ANY)
 		self.list.SetAutoLayout(1)
@@ -92,11 +93,10 @@ class ResultListCtrlPanel(wx.Panel, listmix.ColumnSorterMixin):
 		col = 0
 		## Set column widths
 		for header in self.headers:
-			# if col in [0, 2, 6]:
-			# 	self.list.SetColumnWidth(col, 60)
-			# else:
-			# 	self.list.SetColumnWidth(col, wx.LIST_AUTOSIZE)
-			self.list.SetColumnWidth(col, wx.LIST_AUTOSIZE)
+			if col in self.columnStaticWidthDict:
+				self.list.SetColumnWidth(col, self.columnStaticWidthDict[col])
+			else:
+				self.list.SetColumnWidth(col, wx.LIST_AUTOSIZE)
 			col += 1
 		self.currentItemId = None
 		self.currentItem = 0
@@ -338,6 +338,7 @@ class JobListCtrlPanel(wx.Panel, listmix.ColumnSorterMixin):
 	def OnDoubleClick(self, event):
 		self.logger.debug("OnDoubleClick item %s\n" % self.list.GetItemText(self.currentItem))
 		event.Skip()
+		self.owner.OnStatsButton()
 
 	def OnRightClick(self, event):
 		self.logger.debug("OnRightClick %s\n" % self.list.GetItemText(self.currentItem))
@@ -362,7 +363,7 @@ class Main():
 		self.api = api
 		self.thisPanel = thisPanel
 
-		self.jobFilterBox = wx.StaticBox(self.thisPanel, wx.ID_ANY, 'Job Listing')
+		self.jobFilterBox = wx.StaticBox(self.thisPanel, wx.ID_ANY, 'Job Statistics')
 		self.getServices()
 		self.reviewOrderedColumns = ['job_completed', 'completed_count', 'endpoint_count',
 							   'time_started', 'time_finished', 'time_elapsed',
@@ -371,7 +372,7 @@ class Main():
 		self.reviewOrderedHeaders = ['Completed', 'Total', 'Invoked',
 							   'Started', 'Finished', 'Elapsed',
 							   'Clients', 'Count By Client', 'Status By Client']
-
+		self.reviewColumnWidthDict = {0:80, 1:50, 2:60, 6:50}
 		self.runtimeOrderedColumns = ['status', 'endpoint', 'client_name', 'messages',
 							   'time_started', 'time_finished', 'time_elapsed',
 							   'result_count', 'date_first_invocation',
@@ -386,6 +387,7 @@ class Main():
 							   'Last Failure', 'Consecutive Passes',
 							   'Consecutive Failures', 'Total Passes',
 							   'Total Failures', 'Total Invocations']
+		self.runtimeColumnWidthDict = {3:200, 7:200, 12:120, 13:120, 14:80, 15:80, 16:100}
 		self.jobDetails = {}
 		self.packageList = {}
 		self.packageTypes = []
@@ -398,14 +400,15 @@ class Main():
 		self.packageText = wx.StaticText(self.jobFilterBox, wx.ID_ANY, 'Select Package:')
 		self.packageChoice = wx.Choice(self.jobFilterBox, wx.ID_ANY, (120, 50), choices=self.packageTypes)
 		self.thisPanel.Bind(wx.EVT_CHOICE, self.EvtChoosePackageType, self.packageChoice)
-
 		self.packageChoice.SetSelection(0)
 		self.serviceChoice.SetSelection(0)
-
 		## Job List for selected package
 		self.jobListPanel = JobListCtrlPanel(self.jobFilterBox, self.logger, self)
 		self.jobListPanelSizer = wx.BoxSizer(wx.HORIZONTAL)
 		self.jobListPanelSizer.Add(self.jobListPanel, 1, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.BOTTOM, 10)
+		## Job statistical breakdown button
+		self.statsButton = wx.Button(self.jobFilterBox, wx.ID_ANY, 'Statistics on Client Details')
+		self.jobFilterBox.Bind(wx.EVT_BUTTON, self.OnStatsButton, self.statsButton)
 
 		## Placeholders for the Runtime and Review panels
 		self.reviewBox = wx.StaticBox(self.thisPanel, wx.ID_ANY, 'Service Summary (one row per execution cycle)')
@@ -434,16 +437,19 @@ class Main():
 		## Create boxes to arrange the panels
 		self.mainBox = wx.BoxSizer(wx.HORIZONTAL)
 		self.mainQueryBox = wx.BoxSizer(wx.VERTICAL)
-		#self.thisPanel.Freeze()
 		topBorder, otherBorder = self.jobFilterBox.GetBordersForSizer()
 		self.leftSizer = wx.BoxSizer(wx.VERTICAL)
-		self.leftSizer.AddSpacer(topBorder)
-		self.leftSizer.Add(self.serviceText, 0, wx.TOP|wx.LEFT, 5)
-		self.leftSizer.Add(self.serviceChoice, 0, wx.EXPAND|wx.ALL, 5)
-		self.leftSizer.Add(self.packageText, 0, wx.TOP|wx.LEFT, 5)
-		self.leftSizer.Add(self.packageChoice, 0, wx.EXPAND|wx.ALL, 5)
-		self.leftSizer.AddSpacer(topBorder + 3)
+		self.leftSizer.AddSpacer(topBorder + 5)
+		self.leftSizer.Add(self.serviceText, 0, wx.LEFT|wx.RIGHT, 10)
+		self.leftSizer.AddSpacer(5)
+		self.leftSizer.Add(self.serviceChoice, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
+		self.leftSizer.AddSpacer(5)
+		self.leftSizer.Add(self.packageText, 0, wx.LEFT|wx.RIGHT, 10)
+		self.leftSizer.AddSpacer(5)
+		self.leftSizer.Add(self.packageChoice, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
+		self.leftSizer.AddSpacer(15)
 		self.leftSizer.Add(self.jobListPanelSizer, 1, wx.EXPAND)
+		self.leftSizer.Add(self.statsButton, 0, wx.EXPAND|wx.ALL, 10)
 		self.jobFilterBox.SetSizer(self.leftSizer)
 		self.mainQueryBox.Add(self.jobFilterBox, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.BOTTOM, 5)
 		self.mainBox.Add(self.mainQueryBox, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.BOTTOM, 5)
@@ -467,8 +473,6 @@ class Main():
 		## Get current dataSet to display in the textCtl pane on the right
 		runtimeDataSet = self.jobDetails[self.currentJob].get('runtime')
 		reviewDataSet = self.jobDetails[self.currentJob].get('review')
-		self.logger.debug('resetMainPanel: runtimeDataSet: {}'.format(runtimeDataSet))
-		self.logger.debug('resetMainPanel: reviewDataSet: {}'.format(reviewDataSet))
 
 		## Cleanup previous data sets
 		self.mainBox.Detach(self.resultPanelSizer)
@@ -493,11 +497,11 @@ class Main():
 
 		## Replace the result panes on the right
 		if reviewDataSet is not None:
-			self.reviewListPanel = ResultListCtrlPanel(self.reviewBox, self.logger, reviewDataSet, self.reviewOrderedColumns, self.reviewOrderedHeaders)
+			self.reviewListPanel = ResultListCtrlPanel(self.reviewBox, self.logger, reviewDataSet, self.reviewOrderedColumns, self.reviewOrderedHeaders, self.reviewColumnWidthDict)
 		else:
 			self.reviewListPanel = RawPanel(self.reviewBox, wx.ID_ANY)
 		if runtimeDataSet is not None:
-			self.runtimeListPanel = ResultListCtrlPanel(self.runtimeBox, self.logger, runtimeDataSet, self.runtimeOrderedColumns, self.runtimeOrderedHeaders)
+			self.runtimeListPanel = ResultListCtrlPanel(self.runtimeBox, self.logger, runtimeDataSet, self.runtimeOrderedColumns, self.runtimeOrderedHeaders, self.runtimeColumnWidthDict)
 		else:
 			self.runtimeListPanel = RawPanel(self.reviewBox, wx.ID_ANY)
 
@@ -527,7 +531,7 @@ class Main():
 			self.jobListPanelSizer = None
 			self.jobListPanelSizer = wx.BoxSizer(wx.HORIZONTAL)
 			self.jobListPanelSizer.Add(self.jobListPanel, 1, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.BOTTOM, 10)
-			self.leftSizer.Add(self.jobListPanelSizer, 1, wx.EXPAND)
+			self.leftSizer.Insert(9, self.jobListPanelSizer, wx.EXPAND)
 			self.leftSizer.Layout()
 			self.jobFilterBox.Layout()
 			## setCurrentItem will call resetMainPanel again, for force resizing
@@ -619,3 +623,11 @@ class Main():
 	def EvtChoosePackageType(self, event):
 		self.packageType = event.GetString()
 		self.resetMainPanel(preserve=False)
+
+
+	def OnStatsButton(self, event=None):
+		apiResults = self.api.getResource('job/runtime/{}/{}/stats'.format(self.serviceType, self.currentJob))
+		message = json.dumps(apiResults, indent=8)
+		dlg = wx.lib.dialogs.ScrolledMessageDialog(self.thisPanel, message, "Runtime statistics for {}".format(self.currentJob), size=(500, 500))
+		dlg.ShowModal()
+		dlg.Destroy()

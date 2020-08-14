@@ -91,7 +91,7 @@ class ObjectListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 
 class SimpleQueryListCtrlPanel(wx.Panel, listmix.ColumnSorterMixin):
 	def __init__(self, parent, log, api, dataPanelRef):
-		wx.Panel.__init__(self, parent, wx.ID_ANY, wx.DefaultPosition, size=(200, -1), style=wx.EXPAND|wx.CLIP_CHILDREN)
+		wx.Panel.__init__(self, parent, wx.ID_ANY, wx.DefaultPosition, size=(240, -1), style=wx.EXPAND|wx.CLIP_CHILDREN)
 		self.logger = log
 		self.owner = dataPanelRef
 		self.api = api
@@ -144,7 +144,8 @@ class SimpleQueryListCtrlPanel(wx.Panel, listmix.ColumnSorterMixin):
 		for key,name in data.items():
 			index = self.list.InsertItem(self.list.GetItemCount(), name)
 			self.list.SetItemData(index, key)
-		self.list.SetColumnWidth(0, 200)
+		#self.list.SetColumnWidth(0, 240)
+		self.list.SetColumnWidth(0, wx.LIST_AUTOSIZE)
 
 	# Used by the ColumnSorterMixin, see wx/lib/mixins/listctrl.py
 	def GetListCtrl(self):
