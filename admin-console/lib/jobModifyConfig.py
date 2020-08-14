@@ -1,4 +1,4 @@
-"""Pane for Admin Console ribbon destination: Jobs->View->Statistics.
+"""Pane for Admin Console ribbon destination: Jobs->Modify->Config.
 
 This pane presents details of jobs by service.
 """
@@ -9,6 +9,63 @@ from contextlib import suppress
 
 import wx
 import wx.lib.mixins.listctrl as listmix
+
+class InsertDialog(wx.Dialog):
+	def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition,
+				 size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE,
+				 name='InsertDialog', log=None):
+		wx.Dialog.__init__(self, parent, id, 'Create Job', pos, size, style, name)
+		self.panel = self
+		self.logger = log
+		self.logger.debug('Inside InsertDialog')
+		self.textCtrl = wx.TextCtrl(self.panel, wx.ID_ANY, '', size=(600, 700), style=wx.TE_MULTILINE|wx.TE_RICH|wx.EXPAND)
+
+		mainBox = wx.BoxSizer(wx.VERTICAL)
+		mainBox.Add(self.textCtrl, 1, wx.EXPAND|wx.ALL, 15)
+		line = wx.StaticLine(self, -1, size=(300,-1), style=wx.LI_HORIZONTAL)
+		mainBox.Add(line, 0, wx.EXPAND|wx.RIGHT|wx.LEFT, 20)
+
+		btnsizer = wx.StdDialogButtonSizer()
+		btn = wx.Button(self, wx.ID_OK)
+		btn.SetDefault()
+		btnsizer.AddButton(btn)
+		btn = wx.Button(self, wx.ID_CANCEL)
+		btnsizer.AddButton(btn)
+		btnsizer.Realize()
+		mainBox.Add(btnsizer, 0, wx.ALIGN_RIGHT|wx.ALL, 15)
+
+		self.panel.SetSizer(mainBox)
+		mainBox.Fit(self.panel)
+		self.panel.Show()
+
+
+class UpdateDialog(wx.Dialog):
+	def __init__(self, parent, id=wx.ID_ANY, size=wx.DefaultSize,
+				 pos=wx.DefaultPosition, style=wx.DEFAULT_DIALOG_STYLE,
+				 name='UpdateDialog', log=None, jobName=None, textString=''):
+		wx.Dialog.__init__(self, parent, id, 'Update {}'.format(jobName), pos, size, style, name)
+		self.panel = self
+		self.logger = log
+		self.logger.debug('Inside UpdateDialog')
+		self.textCtrl = wx.TextCtrl(self.panel, wx.ID_ANY, textString, size=(600, 700), style=wx.TE_MULTILINE|wx.TE_RICH|wx.EXPAND)
+
+		mainBox = wx.BoxSizer(wx.VERTICAL)
+		mainBox.Add(self.textCtrl, 1, wx.EXPAND|wx.ALL, 15)
+		line = wx.StaticLine(self, -1, size=(200,-1), style=wx.LI_HORIZONTAL)
+		mainBox.Add(line, 0, wx.EXPAND|wx.RIGHT|wx.LEFT, 20)
+
+		btnsizer = wx.StdDialogButtonSizer()
+		btn = wx.Button(self, wx.ID_OK)
+		btn.SetDefault()
+		btnsizer.AddButton(btn)
+		btn = wx.Button(self, wx.ID_CANCEL)
+		btnsizer.AddButton(btn)
+		btnsizer.Realize()
+		mainBox.Add(btnsizer, 0, wx.ALIGN_RIGHT|wx.ALL, 15)
+
+		self.panel.SetSizer(mainBox)
+		mainBox.Fit(self.panel)
+		self.panel.Show()
 
 
 class ObjectListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
@@ -363,37 +420,14 @@ class Main():
 		self.api = api
 		self.thisPanel = thisPanel
 
-		self.jobFilterBox = wx.StaticBox(self.thisPanel, wx.ID_ANY, 'Job Statistics')
+		self.jobFilterBox = wx.StaticBox(self.thisPanel, wx.ID_ANY, 'Manage Job')
 		self.getServices()
-		self.reviewOrderedColumns = ['job_completed', 'completed_count', 'endpoint_count',
-							   'time_started', 'time_finished', 'time_elapsed',
-							   'active_client_count',
-							   'count_per_client', 'count_per_status']
-		self.reviewOrderedHeaders = ['Completed', 'Total', 'Invoked',
-							   'Started', 'Finished', 'Elapsed',
-							   'Clients', 'Count By Client', 'Status By Client']
-		self.reviewColumnWidthDict = {0:80, 1:50, 2:60, 6:50}
-		self.runtimeOrderedColumns = ['status', 'endpoint', 'client_name', 'messages',
-							   'time_started', 'time_finished', 'time_elapsed',
-							   'result_count', 'date_first_invocation',
-							   'date_last_invocation', 'date_last_success',
-							   'date_last_failure', 'consecutive_jobs_passed',
-							   'consecutive_jobs_failed', 'total_jobs_passed',
-							   'total_jobs_failed', 'total_job_invocations']
-		self.runtimeOrderedHeaders = ['Status', 'Endpoint', 'Client', 'Messages',
-							   'Started', 'Finished', 'Elapsed',
-							   'Results', 'First Invocation',
-							   'Last Invocation', 'Last Success',
-							   'Last Failure', 'Consecutive Passes',
-							   'Consecutive Failures', 'Total Passes',
-							   'Total Failures', 'Total Invocations']
-		self.runtimeColumnWidthDict = {3:200, 7:200, 12:120, 13:120, 14:80, 15:80, 16:100}
 		self.jobDetails = {}
 		self.packageList = {}
 		self.packages = []
 		self.packageType = None
 		self.currentJob = None
-		self.getAllJobsWithStatsForSelectedService()
+		self.getJobsForThisService()
 		self.serviceText = wx.StaticText(self.jobFilterBox, wx.ID_ANY, 'Select Service:')
 		self.serviceChoice = wx.Choice(self.jobFilterBox, wx.ID_ANY, (120, 50), choices=self.services)
 		self.thisPanel.Bind(wx.EVT_CHOICE, self.EvtChooseServiceType, self.serviceChoice)
@@ -406,33 +440,27 @@ class Main():
 		self.jobListPanel = JobListCtrlPanel(self.jobFilterBox, self.logger, self)
 		self.jobListPanelSizer = wx.BoxSizer(wx.HORIZONTAL)
 		self.jobListPanelSizer.Add(self.jobListPanel, 1, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.BOTTOM, 10)
-		## Job statistical breakdown button
-		self.statsButton = wx.Button(self.jobFilterBox, wx.ID_ANY, 'Statistics on Client Details')
-		self.jobFilterBox.Bind(wx.EVT_BUTTON, self.OnStatsButton, self.statsButton)
+		## Buttons
+		self.insertButton = wx.Button(self.jobFilterBox, wx.ID_ANY, 'Insert new job')
+		self.jobFilterBox.Bind(wx.EVT_BUTTON, self.OnInsertButton, self.insertButton)
+		self.updateButton = wx.Button(self.jobFilterBox, wx.ID_ANY, 'Update selected job')
+		self.jobFilterBox.Bind(wx.EVT_BUTTON, self.OnUpdateButton, self.updateButton)
+		self.deleteButton = wx.Button(self.jobFilterBox, wx.ID_ANY, 'Delete selected job')
+		self.jobFilterBox.Bind(wx.EVT_BUTTON, self.OnDeleteGroupButton, self.deleteButton)
 
-		## Placeholders for the Runtime and Review panels
-		self.reviewBox = wx.StaticBox(self.thisPanel, wx.ID_ANY, 'Service Summary (one row per execution cycle)')
-		self.reviewListPanel = RawPanel(self.reviewBox, wx.ID_ANY)
-		self.reviewSizer = wx.BoxSizer(wx.HORIZONTAL)
-		self.reviewSizerV = wx.BoxSizer(wx.VERTICAL)
-		self.reviewSizerV.AddSpacer(10)
-		self.reviewSizerV.Add(self.reviewListPanel, 1, wx.EXPAND|wx.ALL, 10)
-		self.reviewSizer.Add(self.reviewSizerV)
-		self.reviewBox.SetSizer(self.reviewSizer)
-
-		self.runtimeBox = wx.StaticBox(self.thisPanel, wx.ID_ANY, 'Client Details (one row per endpoint)')
-		self.runtimeListPanel = RawPanel(self.runtimeBox, wx.ID_ANY)
-		self.runtimeSizer = wx.BoxSizer(wx.HORIZONTAL)
-		self.runtimeSizerV = wx.BoxSizer(wx.VERTICAL)
-		self.runtimeSizerV.AddSpacer(10)
-		self.runtimeSizerV.Add(self.runtimeListPanel, 1, wx.EXPAND|wx.ALL, 10)
-		self.runtimeSizer.Add(self.runtimeSizerV)
-		self.runtimeBox.SetSizer(self.runtimeSizer)
+		## Right side
+		self.jobConfigBox = wx.StaticBox(self.thisPanel, wx.ID_ANY, 'Job Configuration')
+		## Placeholder for when we known how to create an TextCtrl
+		self.jobConfigPanel = RawPanel(self.jobConfigBox, wx.ID_ANY)
+		self.jobConfigSizer = wx.BoxSizer(wx.HORIZONTAL)
+		self.jobConfigSizerV = wx.BoxSizer(wx.VERTICAL)
+		self.jobConfigSizerV.AddSpacer(10)
+		self.jobConfigSizerV.Add(self.jobConfigPanel, 1, wx.EXPAND|wx.ALL, 10)
+		self.jobConfigSizer.Add(self.jobConfigSizerV)
+		self.jobConfigBox.SetSizer(self.jobConfigSizer)
 
 		self.resultPanelSizer = wx.BoxSizer(wx.VERTICAL)
-		self.resultPanelSizer.Add(self.reviewBox, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
-		self.resultPanelSizer.AddSpacer(20)
-		self.resultPanelSizer.Add(self.runtimeBox, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
+		self.resultPanelSizer.Add(self.jobConfigBox, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
 
 		## Create boxes to arrange the panels
 		self.mainBox = wx.BoxSizer(wx.HORIZONTAL)
@@ -449,7 +477,13 @@ class Main():
 		self.leftSizer.Add(self.packageChoice, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
 		self.leftSizer.AddSpacer(15)
 		self.leftSizer.Add(self.jobListPanelSizer, 1, wx.EXPAND)
-		self.leftSizer.Add(self.statsButton, 0, wx.EXPAND|wx.ALL, 10)
+		self.leftSizer.AddSpacer(10)
+		self.leftSizer.Add(self.insertButton, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
+		self.leftSizer.AddSpacer(10)
+		self.leftSizer.Add(self.updateButton, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
+		self.leftSizer.AddSpacer(20)
+		self.leftSizer.Add(self.deleteButton, 0, wx.EXPAND|wx.ALL, 10)
+
 		self.jobFilterBox.SetSizer(self.leftSizer)
 		self.mainQueryBox.Add(self.jobFilterBox, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.BOTTOM, 5)
 		self.mainBox.Add(self.mainQueryBox, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.BOTTOM, 5)
@@ -471,55 +505,76 @@ class Main():
 
 		self.logger.debug('resetMainPanel: currentJob: {}'.format(self.currentJob))
 		## Get current dataSet to display in the textCtl pane on the right
-		runtimeDataSet = self.jobDetails[self.currentJob].get('runtime')
-		reviewDataSet = self.jobDetails[self.currentJob].get('review')
+		dataSet = self.jobDetails.get(self.currentJob)
 
 		## Cleanup previous data sets
 		self.mainBox.Detach(self.resultPanelSizer)
-		self.reviewSizerV.Detach(self.reviewListPanel)
-		self.reviewSizerV = None
-		self.reviewSizer = None
-		self.runtimeSizerV.Detach(self.runtimeListPanel)
-		self.runtimeSizerV = None
-		self.runtimeSizer = None
-		self.reviewListPanel.Destroy()
-		self.runtimeListPanel.Destroy()
+		self.jobConfigSizerV.Detach(self.jobConfigPanel)
+		self.jobConfigSizerV = None
+		self.jobConfigSizer = None
+
+		self.jobConfigPanel.Destroy()
 		self.resultPanelSizer = None
 		self.resultPanelSizer = wx.BoxSizer(wx.VERTICAL)
-		self.runtimeSizer = wx.BoxSizer(wx.HORIZONTAL)
-		self.runtimeSizerV = wx.BoxSizer(wx.VERTICAL)
-		self.reviewSizer = wx.BoxSizer(wx.HORIZONTAL)
-		self.reviewSizerV = wx.BoxSizer(wx.VERTICAL)
-		self.reviewBox.Destroy()
-		self.runtimeBox.Destroy()
-		self.reviewBox = wx.StaticBox(self.thisPanel, wx.ID_ANY, 'Service Summary (one row per execution cycle)')
-		self.runtimeBox = wx.StaticBox(self.thisPanel, wx.ID_ANY, 'Client Details (one row per endpoint)')
+		self.jobConfigSizer = wx.BoxSizer(wx.HORIZONTAL)
+		self.jobConfigSizerV = wx.BoxSizer(wx.VERTICAL)
+		self.jobConfigBox.Destroy()
+		self.jobConfigBox = wx.StaticBox(self.thisPanel, wx.ID_ANY, 'Job Configuration')
+		## Static texts
+		self.text1 = wx.StaticText(self.jobConfigBox, label="Active: ")
+		self.text2 = wx.StaticText(self.jobConfigBox, label="Created: ")
+		self.text3 = wx.StaticText(self.jobConfigBox, label="Created by: ")
+		self.text4 = wx.StaticText(self.jobConfigBox, label="Updated: ")
+		self.text5 = wx.StaticText(self.jobConfigBox, label="Updated by: ")
+		self.value1 = wx.TextCtrl(self.jobConfigBox, wx.ID_ANY, value=str(dataSet.get('active', '')), size=(500,-1), style=wx.TE_READONLY|wx.EXPAND|wx.BORDER_NONE)
+		self.value2 = wx.TextCtrl(self.jobConfigBox, wx.ID_ANY, value=str(dataSet.get('time_created', '')), size=(500,-1), style=wx.TE_READONLY|wx.EXPAND|wx.BORDER_NONE)
+		self.value3 = wx.TextCtrl(self.jobConfigBox, wx.ID_ANY, value=str(dataSet.get('object_created_by', '')), size=(500,-1), style=wx.TE_READONLY|wx.EXPAND|wx.BORDER_NONE)
+		self.value4 = wx.TextCtrl(self.jobConfigBox, wx.ID_ANY, value=str(dataSet.get('time_updated', '')), size=(500,-1), style=wx.TE_READONLY|wx.EXPAND|wx.BORDER_NONE)
+		self.value5 = wx.TextCtrl(self.jobConfigBox, wx.ID_ANY, value=str(dataSet.get('object_updated_by', '')), size=(500,-1), style=wx.TE_READONLY|wx.EXPAND|wx.BORDER_NONE)
 
 		## Replace the result panes on the right
-		if reviewDataSet is not None:
-			self.reviewListPanel = ResultListCtrlPanel(self.reviewBox, self.logger, reviewDataSet, self.reviewOrderedColumns, self.reviewOrderedHeaders, self.reviewColumnWidthDict)
+		if dataSet is not None:
+			self.logger.debug('resetMainPanel: dataSet: {}'.format(dataSet))
+			textString = json.dumps(dataSet.get('content', {}), indent=8)
+			self.jobConfigPanel = wx.TextCtrl(self.jobConfigBox, wx.ID_ANY, textString, style=wx.TE_MULTILINE|wx.TE_RICH|wx.TE_READONLY|wx.EXPAND)
 		else:
-			self.reviewListPanel = RawPanel(self.reviewBox, wx.ID_ANY)
-		if runtimeDataSet is not None:
-			self.runtimeListPanel = ResultListCtrlPanel(self.runtimeBox, self.logger, runtimeDataSet, self.runtimeOrderedColumns, self.runtimeOrderedHeaders, self.runtimeColumnWidthDict)
-		else:
-			self.runtimeListPanel = RawPanel(self.reviewBox, wx.ID_ANY)
+			self.jobConfigPanel = RawPanel(self.jobConfigBox, wx.ID_ANY)
 
 		## Put back in the sizers and refresh
-		self.reviewSizerV.AddSpacer(20)
-		self.reviewSizerV.Add(self.reviewListPanel, 1, wx.EXPAND|wx.ALL, 10)
-		self.reviewSizer.Add(self.reviewSizerV, 1, wx.EXPAND)
-		self.reviewBox.SetSizer(self.reviewSizer)
-		self.runtimeSizerV.AddSpacer(20)
-		self.runtimeSizerV.Add(self.runtimeListPanel, 1, wx.EXPAND|wx.ALL, 10)
-		self.runtimeSizer.Add(self.runtimeSizerV, 1, wx.EXPAND)
-		self.runtimeBox.SetSizer(self.runtimeSizer)
-		self.resultPanelSizer.Add(self.reviewBox, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
-		self.resultPanelSizer.AddSpacer(20)
-		self.resultPanelSizer.Add(self.runtimeBox, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
+		self.jobConfigSizerV.AddSpacer(30)
+
+		self.dataSizer1 = wx.BoxSizer(wx.HORIZONTAL)
+		self.dataSizer1.Add(self.text1, 0, wx.LEFT, 5)
+		self.dataSizer1.Add(self.value1, 0, wx.EXPAND)
+		self.jobConfigSizerV.Add(self.dataSizer1, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 5)
+
+		self.dataSizer2 = wx.BoxSizer(wx.HORIZONTAL)
+		self.dataSizer2.Add(self.text2, 0, wx.LEFT, 5)
+		self.dataSizer2.Add(self.value2, 0, wx.EXPAND)
+		self.jobConfigSizerV.Add(self.dataSizer2, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 5)
+
+		self.dataSizer3 = wx.BoxSizer(wx.HORIZONTAL)
+		self.dataSizer3.Add(self.text3, 0, wx.LEFT, 5)
+		self.dataSizer3.Add(self.value3, 0, wx.EXPAND)
+		self.jobConfigSizerV.Add(self.dataSizer3, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 5)
+
+		self.dataSizer4 = wx.BoxSizer(wx.HORIZONTAL)
+		self.dataSizer4.Add(self.text4, 0, wx.LEFT, 5)
+		self.dataSizer4.Add(self.value4, 0, wx.EXPAND)
+		self.jobConfigSizerV.Add(self.dataSizer4, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 5)
+
+		self.dataSizer5 = wx.BoxSizer(wx.HORIZONTAL)
+		self.dataSizer5.Add(self.text5, 0, wx.LEFT, 5)
+		self.dataSizer5.Add(self.value5, 0, wx.EXPAND)
+		self.jobConfigSizerV.Add(self.dataSizer5, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 5)
+
+		self.jobConfigSizerV.AddSpacer(10)
+		self.jobConfigSizerV.Add(self.jobConfigPanel, 1, wx.EXPAND|wx.ALL, 10)
+		self.jobConfigSizer.Add(self.jobConfigSizerV, 1, wx.EXPAND)
+		self.jobConfigBox.SetSizer(self.jobConfigSizer)
+		self.resultPanelSizer.Add(self.jobConfigBox, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
 		self.mainBox.Add(self.resultPanelSizer, 1, wx.EXPAND|wx.TOP|wx.BOTTOM, 10)
-		self.reviewSizer.Layout()
-		self.runtimeSizer.Layout()
+		self.jobConfigSizer.Layout()
 		self.resultPanelSizer.Layout()
 
 		if not preserve:
@@ -547,49 +602,24 @@ class Main():
 		self.services = ['contentGathering', 'universalJob']
 		self.serviceType = self.services[0]
 
-	def getAllJobsWithStatsForSelectedService(self):
-		self.logger.debug('getAllJobsWithStatsForSelectedService')
+
+	def getJobsForThisService(self):
+		self.logger.debug('getJobs')
 		self.jobDetails.clear()
 		self.packageList.clear()
-
-		apiResults = self.api.getResource('job/review/{}'.format(self.serviceType))
+		apiResults = self.api.getResource('job/config/{}'.format(self.serviceType))
 		jobList = apiResults.get('Jobs', [])
-		self.logger.debug('getAllJobsWithStatsForSelectedService: review result count: {}.  results: {}'.format(len(jobList), jobList))
 		for jobName in jobList:
-			self.jobDetails[jobName] = {}
-			## Just doing a string split to get package name, which works unless
-			## someone puts a period in a job name; more thorough method (though
-			## heavier on resources) is to query the package from job/config.
-			tmpList = jobName.split('.')
-			pkgName = tmpList[0]
-			shortName = tmpList[1]
+			jobConfig = self.api.getResource('job/config/{}/{}'.format(self.serviceType, jobName))
+			jobData = jobConfig.get(jobName, {})
+			self.jobDetails[jobName] = jobData
+			pkgName = jobData.get('package', 'Unknown')
+			## Fancy way of spliting to get the last part (better performance),
+			## which is similar to:  shortName = jobName.split('.')[1]
+			shortName = jobName.partition('{}.'.format(pkgName))[2]
 			if pkgName not in self.packageList:
 				self.packageList[pkgName] = {}
 			self.packageList[pkgName][shortName] = jobName
-			jobResults = self.api.getResource('job/review/{}/{}'.format(self.serviceType, jobName))
-			jobData = jobResults.get(jobName, [])
-			self.jobDetails[jobName]['review'] = jobData
-
-		apiResults = self.api.getResource('job/runtime/{}'.format(self.serviceType))
-		jobList = apiResults.get('Jobs', [])
-		self.logger.debug('getAllJobsWithStatsForSelectedService: runtime result count: {}.  results: {}'.format(len(jobList), jobList))
-		for jobName in jobList:
-			## It's possible to have runtime but not review results
-			if jobName not in self.jobDetails:
-				self.jobDetails[jobName] = {}
-				tmpList = jobName.split('.')
-				pkgName = tmpList[0]
-				shortName = tmpList[1]
-			if pkgName not in self.packageList:
-				self.packageList[pkgName] = {}
-			self.packageList[pkgName][shortName] = jobName
-
-			jobResults = self.api.getResource('job/runtime/{}/{}'.format(self.serviceType, jobName))
-			## The result is a dictionary with the keys being endpoints (IPs)
-			listFormat = []
-			for key,value in jobResults.items():
-				listFormat.append(value)
-			self.jobDetails[jobName]['runtime'] = listFormat
 
 		self.packages.clear()
 		for key in self.packageList:
@@ -597,10 +627,10 @@ class Main():
 		self.packageType = self.packages[0]
 		self.currentJob = self.packageList[self.packageType][next(iter(self.packageList[self.packageType]))]
 
+
 	def EvtChooseServiceType(self, event):
 		self.serviceType = event.GetString()
-		self.getAllJobsWithStatsForSelectedService()
-		#self.updateVariables()
+		self.getJobsForThisService()
 		## When we change the service, update the package choices
 		self.logger.debug('EvtChooseServiceType: update variables')
 		self.packageChoice.Clear()
@@ -615,8 +645,8 @@ class Main():
 		self.packageChoice.SetSelection(0)
 
 		self.currentJob = self.packageList[self.packageType][next(iter(self.packageList[self.packageType]))]
-		self.logger.debug('getAllJobsWithStatsForSelectedService: packageType: {}'.format(self.packageType))
-		self.logger.debug('getAllJobsWithStatsForSelectedService: currentJob: {}'.format(self.currentJob))
+		self.logger.debug('EvtChooseServiceType: packageType: {}'.format(self.packageType))
+		self.logger.debug('EvtChooseServiceType: currentJob: {}'.format(self.currentJob))
 		self.resetMainPanel(preserve=False)
 
 
@@ -625,9 +655,142 @@ class Main():
 		self.resetMainPanel(preserve=False)
 
 
-	def OnStatsButton(self, event=None):
-		apiResults = self.api.getResource('job/runtime/{}/{}/stats'.format(self.serviceType, self.currentJob))
-		message = json.dumps(apiResults, indent=8)
-		dlg = wx.lib.dialogs.ScrolledMessageDialog(self.thisPanel, message, "Runtime statistics for {}".format(self.currentJob), size=(500, 500))
-		dlg.ShowModal()
-		dlg.Destroy()
+	def refreshCachedJobData(self):
+		## Pull new version from API
+		jobConfig = self.api.getResource('job/config/{}/{}'.format(self.serviceType, self.currentJob))
+		jobData = jobConfig.get(self.currentJob, {})
+		## Overwrite cached version
+		self.jobDetails[self.currentJob] = jobData
+
+
+	def OnUpdateButton(self, event=None):
+		dataSet = self.jobDetails[self.currentJob].get('content', {})
+		dataSetString = json.dumps(dataSet, indent=8)
+		self.logger.debug('OnUpdateButton: dataSetString before: {}'.format(dataSetString))
+		myDialog = UpdateDialog(self.thisPanel, log=self.logger, jobName=self.currentJob, textString=dataSetString)
+		myDialog.CenterOnScreen()
+		value = myDialog.ShowModal()
+		## Pull results out before destroying the window
+		newData = myDialog.textCtrl.GetValue()
+		self.logger.debug('OnUpdateButton: dataSetString after : {}'.format(json.dumps(newData, indent=8)))
+		myDialog.Destroy()
+		if value == wx.ID_OK:
+			if newData is None or newData == '':
+				self.logger.debug('OnUpdateButton: nothing to insert')
+				return
+			dataAsDict = json.loads(newData)
+			#data = {}
+			#data['content'] = dataAsDict
+			#data['source'] = 'admin console'
+			self.logger.debug('OnUpdateButton: value == OK')
+			wx.BeginBusyCursor()
+			#(responseCode, responseAsJson) = self.api.putResource('job/config/{}/{}'.format(self.serviceType, self.currentJob), {'content' : data})
+			(responseCode, responseAsJson) = self.api.putResource('job/config/{}/{}'.format(self.serviceType, self.currentJob), {'content' : dataAsDict})
+			wx.EndBusyCursor()
+			if responseCode == 200:
+				dlgResult = wx.MessageDialog(self.thisPanel, 'SUCCESS', 'Updated job {}'.format(self.currentJob), wx.OK|wx.ICON_INFORMATION)
+				dlgResult.CenterOnScreen()
+				dlgResult.ShowModal()
+				dlgResult.Destroy()
+				self.logger.debug('OnUpdateButton: job updated: {}'.format(self.currentJob))
+				## Update the local cached data
+				self.refreshCachedJobData()
+				self.resetMainPanel()
+			else:
+				errorMsg = json.dumps(responseAsJson)
+				with suppress(Exception):
+					errorMsg = str(responseAsJson[list(responseAsJson.keys())[0]])
+				dlgResult = wx.MessageDialog(self.thisPanel, errorMsg, 'Job update error', wx.OK|wx.ICON_ERROR)
+				dlgResult.CenterOnScreen()
+				dlgResult.ShowModal()
+				dlgResult.Destroy()
+		else:
+			self.logger.debug('OnUpdateButton: value == CANCEL')
+
+
+	def OnInsertButton(self, event=None):
+		myDialog = InsertDialog(self.thisPanel, log=self.logger)
+		myDialog.CenterOnScreen()
+		value = myDialog.ShowModal()
+		## Pull results out before destroying the window
+		jobData = myDialog.textCtrl.GetValue()
+		myDialog.Destroy()
+		if value == wx.ID_OK:
+			self.logger.debug('OnInsertButton: value == OK')
+			if jobData is None or jobData == '':
+				self.logger.debug('OnInsertButton: nothing to insert')
+				return
+			dataAsDict = json.loads(jobData)
+			data = {}
+			data['source'] = 'admin console'
+			data['package'] = self.packageType
+			data['content'] = dataAsDict
+			wx.BeginBusyCursor()
+			(responseCode, responseAsJson) = self.api.postResource('job/config/{}'.format(self.serviceType), {'content' : data})
+			wx.EndBusyCursor()
+			if responseCode == 200:
+				#dlgResult = wx.MessageDialog(self.thisPanel, 'SUCCESS', 'Inserted Job '.format('{}.{}'.format(self.packageType, dataAsDict.get('jobName'))), wx.OK|wx.ICON_INFORMATION)
+				dlgResult = wx.MessageDialog(self.thisPanel, 'SUCCESS', responseAsJson.get('Response'), wx.OK|wx.ICON_INFORMATION)
+				dlgResult.CenterOnScreen()
+				dlgResult.ShowModal()
+				dlgResult.Destroy()
+				self.logger.debug('OnInsertButton: Job created.')
+
+				wx.BeginBusyCursor()
+				self.currentJob = '{}.{}'.format(self.packageType, dataAsDict.get('jobName'))
+				self.logger.debug('OnInsertButton: requesting job from API: {}'.format(self.currentJob))
+				jobConfig = self.api.getResource('job/config/{}/{}'.format(self.serviceType, self.currentJob))
+				jobData = jobConfig.get(self.currentJob, {})
+				self.jobDetails[self.currentJob] = jobData
+				self.packageList[self.packageType][dataAsDict.get('jobName')] = self.currentJob
+				wx.EndBusyCursor()
+
+				## Don't preserve; need to rebuild the items
+				self.refreshCachedJobData()
+				self.resetMainPanel(preserve=False)
+			else:
+				errorMsg = json.dumps(responseAsJson)
+				with suppress(Exception):
+					errorMsg = str(responseAsJson[list(responseAsJson.keys())[0]])
+				dlgResult = wx.MessageDialog(self.thisPanel, errorMsg, 'Job insert error', wx.OK|wx.ICON_ERROR)
+				dlgResult.CenterOnScreen()
+				dlgResult.ShowModal()
+				dlgResult.Destroy()
+		else:
+			self.logger.debug('OnInsertButton: value == CANCEL')
+
+
+	def OnDeleteGroupButton(self, event=None):
+		self.logger.debug('OnDeleteGroupButton: currentJob: {}'.format(self.currentJob))
+		dlgDelete = wx.MessageDialog(self.thisPanel, 'Are you sure you want to delete this job: {}?'.format(self.currentJob), 'Delete job', wx.OK|wx.CANCEL|wx.ICON_QUESTION)
+		dlgDelete.CenterOnScreen()
+		value = dlgDelete.ShowModal()
+		dlgDelete.Destroy()
+		wx.BeginBusyCursor()
+		try:
+			if value == wx.ID_OK:
+				self.logger.debug('OnDeleteGroupButton: value == OK')
+				## If user pressed OK (and not Cancel), then call API to delete
+				(responseCode, responseAsJson) = self.api.deleteResource('job/config/{}/{}'.format(self.serviceType, self.currentJob))
+				if responseCode == 200:
+					self.logger.debug('OnDeleteGroupButton: removed job: {}'.format(self.currentJob))
+				else:
+					errorMsg = json.dumps(responseAsJson)
+					with suppress(Exception):
+						errorMsg = str(responseAsJson[list(responseAsJson.keys())[0]])
+					dlgResult = wx.MessageDialog(self.thisPanel, errorMsg, 'Delete job {}'.format(self.currentGroup), wx.OK|wx.ICON_ERROR)
+					dlgResult.CenterOnScreen()
+					dlgResult.ShowModal()
+					dlgResult.Destroy()
+				## Probably can just use cache, but let's pull updated data, in
+				## case there is some backend failure that didn't remove job...
+				## the user would still see it and then troubleshoot.
+				self.getJobsForThisService()
+				## Don't preserve; need to rebuild the items
+				self.resetMainPanel(preserve=False)
+			else:
+				self.logger.debug('OnDeleteGroupButton: value == CANCEL')
+		except:
+			stacktrace = traceback.format_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2])
+			self.logger.debug('Failure in OnDeleteGroupButton: {}'.format(stacktrace))
+		wx.EndBusyCursor()

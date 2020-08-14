@@ -37,7 +37,7 @@ import jobViewListing
 import jobViewStatistics
 #import jobViewSchedules
 #import jobModifyToggle
-#import jobModifyManage
+import jobModifyConfig
 import ocpRestAPI
 
 ## Constants for ribbon buttons
@@ -232,7 +232,7 @@ class MainFrame(wx.Frame):
 										agwStyle=RB.RIBBON_PANEL_NO_AUTO_MINIMISE)
 		jobs_modify_selection = RB.RibbonButtonBar(jobs_modify_panel, wx.ID_ANY)
 		jobs_modify_selection.AddSimpleButton(ID_JOBS_TOGGLE, "Toggle", CreateBitmap("Replace"), "Enable/Disable jobs")
-		jobs_modify_selection.AddSimpleButton(ID_JOBS_EDIT, "Manage", CreateBitmap("ControlPanel"), "Edit job configurations")
+		jobs_modify_selection.AddSimpleButton(ID_JOBS_EDIT, "Config", CreateBitmap("ControlPanel"), "Edit job configurations")
 
 		self._bitmap_creation_dc.SetFont(label_font)
 		self._ribbon.Realize()
@@ -494,8 +494,8 @@ class MainFrame(wx.Frame):
 	def OnSelectionJobEdit(self, event):
 		self.logger.debug("Job Edit button clicked.")
 		self.resetRawPanel()
-		#wx.BeginBusyCursor()
-		#jobModifyManage.Main(self.rawPanel, self.logger, self.api)
+		wx.BeginBusyCursor()
+		jobModifyConfig.Main(self.rawPanel, self.logger, self.api)
 
 
 	def OnTogglePanels(self, event):
