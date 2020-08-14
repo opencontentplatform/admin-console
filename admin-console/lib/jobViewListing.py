@@ -77,7 +77,10 @@ class ResultListCtrlPanel(wx.Panel, listmix.ColumnSorterMixin):
 		col = 0
 		## Set column widths
 		for header in self.headers:
-			self.list.SetColumnWidth(col, wx.LIST_AUTOSIZE)
+			if col == 3:
+				self.list.SetColumnWidth(col, 50)
+			else:
+				self.list.SetColumnWidth(col, wx.LIST_AUTOSIZE)
 			col += 1
 		self.currentItemId = None
 		self.currentItem = 0
@@ -247,18 +250,21 @@ class Main():
 		## Create boxes to arrange the panels
 		self.mainBox = wx.BoxSizer(wx.HORIZONTAL)
 		self.mainQueryBox = wx.BoxSizer(wx.VERTICAL)
+		self.jobBox = wx.BoxSizer(wx.VERTICAL)
 		self.thisPanel.Freeze()
 		topBorder, otherBorder = self.jobFilterBox.GetBordersForSizer()
 		self.leftSizer = wx.BoxSizer(wx.VERTICAL)
-		self.leftSizer.AddSpacer(topBorder)
-		self.leftSizer.Add(self.serviceText, 0, wx.TOP|wx.LEFT, 5)
-		self.leftSizer.Add(self.serviceChoice, 0, wx.EXPAND|wx.ALL, 5)
-		self.leftSizer.AddSpacer(topBorder + 3)
+		self.leftSizer.AddSpacer(topBorder + 5)
+		self.leftSizer.Add(self.serviceText, 0, wx.LEFT|wx.RIGHT, 10)
+		self.leftSizer.AddSpacer(5)
+		self.leftSizer.Add(self.serviceChoice, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
+		self.leftSizer.AddSpacer(20)
 		self.leftSizer.Add(self.rb, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
 		self.jobFilterBox.SetSizer(self.leftSizer)
 		self.mainQueryBox.Add(self.jobFilterBox, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.BOTTOM, 5)
 		self.mainBox.Add(self.mainQueryBox, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.BOTTOM, 5)
-		self.mainBox.Add(self.jobListPanel, 1, wx.EXPAND|wx.TOP, 7)
+		self.jobBox.Add(self.jobListPanel, 1, wx.EXPAND|wx.TOP, 6)
+		self.mainBox.Add(self.jobBox, 1, wx.EXPAND|wx.ALL, 11)
 
 		self.thisPanel.SetSizer(self.mainBox)
 		self.thisPanel.Thaw()
@@ -275,12 +281,13 @@ class Main():
 			self.thisPanel.Freeze()
 
 			## Replace the jobListPanel pane on the right
-			self.mainBox.Detach(self.jobListPanel)
+			self.jobBox.Detach(self.jobListPanel)
 			self.jobListPanel.Destroy()
 			self.jobListPanel = ResultListCtrlPanel(self.thisPanel, self.logger,
 													self.api, self.jobDetails,
 													self.jobView, self.orderedHeaders)
-			self.mainBox.Add(self.jobListPanel, 1, wx.EXPAND|wx.ALL, 15)
+			self.jobBox.Add(self.jobListPanel, 1, wx.EXPAND|wx.TOP, 6)
+			self.jobBox.Layout()
 			self.thisPanel.SetSizer(self.mainBox)
 			self.thisPanel.Thaw()
 			self.thisPanel.Show()

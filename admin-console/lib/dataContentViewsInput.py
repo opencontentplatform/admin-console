@@ -187,7 +187,7 @@ class ObjectListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 class InputListCtrlPanel(wx.Panel, listmix.ColumnSorterMixin):
 	def __init__(self, parent, log, api, className, attrName, dataPanelRef):
 		#wx.Panel.__init__(self, parent, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, style=wx.EXPAND|wx.CLIP_CHILDREN)
-		wx.Panel.__init__(self, parent, wx.ID_ANY, wx.DefaultPosition, size=(200, -1), style=wx.EXPAND|wx.CLIP_CHILDREN)
+		wx.Panel.__init__(self, parent, wx.ID_ANY, wx.DefaultPosition, size=(240, -1), style=wx.EXPAND|wx.CLIP_CHILDREN)
 		self.logger = log
 		self.owner = dataPanelRef
 		self.api = api
@@ -318,7 +318,7 @@ class InputListCtrlPanel(wx.Panel, listmix.ColumnSorterMixin):
 class InputDrivenQueryListCtrlPanel(wx.Panel, listmix.ColumnSorterMixin):
 	def __init__(self, parent, log, api, dataPanelRef):
 		#wx.Panel.__init__(self, parent, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, style=wx.EXPAND|wx.CLIP_CHILDREN)
-		wx.Panel.__init__(self, parent, wx.ID_ANY, wx.DefaultPosition, size=(200, -1), style=wx.EXPAND|wx.CLIP_CHILDREN)
+		wx.Panel.__init__(self, parent, wx.ID_ANY, wx.DefaultPosition, size=(240, -1), style=wx.EXPAND|wx.CLIP_CHILDREN)
 		self.logger = log
 		self.owner = dataPanelRef
 		self.api = api
