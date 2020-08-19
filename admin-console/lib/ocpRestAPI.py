@@ -98,12 +98,14 @@ class RestAPI():
 		return responseAsJson
 
 
-	def getResource(self, resource):
+	def getResource(self, resource, customPayload=None):
 		responseAsJson = None
 		try:
 			urlForCiQuery = '{}/{}'.format(self.baseURL, resource)
 			logger.info("Calling url in ocpRestAPI.getResource: {}".format(urlForCiQuery))
 			payloadAsString = json.dumps({})
+			if customPayload is not None and isinstance(customPayload, dict):
+				payloadAsString = json.dumps(customPayload)
 			customHeaders = self.header.copy()
 			customHeaders['resultsFormat'] = 'Flat'
 			## Issue a GET call to URL

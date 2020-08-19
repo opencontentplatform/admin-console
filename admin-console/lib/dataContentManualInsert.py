@@ -13,7 +13,6 @@ from wx.lib.pubsub import pub
 #from subpub import sub, pub
 
 
-
 class Page2(wx.Panel):
 	def __init__(self, parent, logger, onNextPage, onBackPage, page1, data, api):
 		wx.Panel.__init__(self, parent)

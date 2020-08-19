@@ -36,7 +36,7 @@ import dataModelsMetaDataHistory
 import jobViewListing
 import jobViewStatistics
 #import jobViewSchedules
-#import jobModifyToggle
+import jobModifyToggle
 import jobModifyConfig
 import ocpRestAPI
 
@@ -488,8 +488,8 @@ class MainFrame(wx.Frame):
 	def OnSelectionJobToggle(self, event):
 		self.logger.debug("Job Toggle button clicked.")
 		self.resetRawPanel()
-		#wx.BeginBusyCursor()
-		#jobModifyToggle.Main(self.rawPanel, self.logger, self.api)
+		wx.BeginBusyCursor()
+		jobModifyToggle.Main(self.rawPanel, self.logger, self.api)
 
 	def OnSelectionJobEdit(self, event):
 		self.logger.debug("Job Edit button clicked.")

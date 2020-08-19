@@ -65,7 +65,7 @@ class SimpleQueryListView(wx.Panel):
 
 
 	def getPage(self, queryName):
-		apiResults = self.api.getResource('query/stored/{}'.format(queryName))
+		apiResults = self.api.getResource('query/simple/{}'.format(queryName))
 		if len(apiResults) > 0:
 			self.webPageContent = mapViewData(apiResults)
 		with open(self.cachedPage, 'w') as out:
@@ -125,7 +125,7 @@ class SimpleQueryListCtrlPanel(wx.Panel, listmix.ColumnSorterMixin):
 		self.list.Bind(wx.EVT_RIGHT_UP, self.OnRightClick)
 
 	def getQueries(self):
-		apiResults = self.api.getResource('query/stored')
+		apiResults = self.api.getResource('query/simple')
 		objectId = 1
 		for name in apiResults.get('Queries', {}):
 			self.queries[objectId] = name
