@@ -135,7 +135,6 @@ class JobListCtrlPanel(wx.Panel, listmix.ColumnSorterMixin):
 	def OnDoubleClick(self, event):
 		self.logger.debug("OnDoubleClick item %s\n" % self.list.GetItemText(self.currentItem))
 		event.Skip()
-		self.owner.OnStatsButton()
 
 	def OnRightClick(self, event):
 		self.logger.debug("OnRightClick %s\n" % self.list.GetItemText(self.currentItem))
