@@ -35,7 +35,7 @@ import dataModelsHistory
 import dataModelsMetaDataHistory
 import jobViewListing
 import jobViewStatistics
-#import jobViewSchedules
+import jobViewSchedules
 import jobModifyToggle
 import jobModifyConfig
 import ocpRestAPI
@@ -482,8 +482,8 @@ class MainFrame(wx.Frame):
 	def OnSelectionJobSchedules(self, event):
 		self.logger.debug("Job Schedules button clicked.")
 		self.resetRawPanel()
-		#wx.BeginBusyCursor()
-		#jobViewSchedules.Main(self.rawPanel, self.logger, self.api)
+		wx.BeginBusyCursor()
+		jobViewSchedules.Main(self.rawPanel, self.logger, self.api)
 
 	def OnSelectionJobToggle(self, event):
 		self.logger.debug("Job Toggle button clicked.")
