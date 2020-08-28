@@ -1,0 +1,36 @@
+body {
+	font-family:Arial, Helvetica, FreeSans, sans-serif;
+	font-size:12px;
+	margin:0px;
+	padding:0px;
+	line-height:1.4;
+}
+.axis path {
+	fill:none;
+	stroke:grey;
+	shape-rendering: crispEdges;
+}
+.grid line {
+	stroke: lightgrey;
+	opacity: 0.6;
+	shape-rendering: crispEdges;
+}
+.grid path {
+  stroke-width: 0;
+}
+div.tooltip {
+    position: absolute;
+    text-align: center;
+    width: 60px;
+    height: 28px;
+    padding: 2px;
+    font: 12px sans-serif;
+    background: lightsteelblue;
+    border: 0px;
+    border-radius: 8px;
+    pointer-events: none;
+}
+rect.content {
+	fill-opacity:0.5;
+	stroke-width:1px;
+}
