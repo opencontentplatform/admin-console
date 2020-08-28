@@ -50,9 +50,9 @@ class SimpleQueryListView(wx.Panel):
 			self.webPageContent = ''
 			self.localDir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'webview')
 			self.cachedPage = os.path.join(self.localDir, 'thisView.html')
-			self.localD3 = os.path.join(self.localDir, 'static', 'thisView.html')
-			self.localWrapper = os.path.join(self.localDir, 'static', 'ocp_many.js')
-			self.localCSS = os.path.join(self.localDir, 'static', 'ocp_model.css')
+			# self.localD3 = os.path.join(self.localDir, 'static', 'thisView.html')
+			# self.localWrapper = os.path.join(self.localDir, 'static', 'ocp_many.js')
+			# self.localCSS = os.path.join(self.localDir, 'static', 'ocp_model.css')
 			self.browser = wx.html2.WebView.New(self)
 			self.logger.debug('SimpleQueryListView: 2')
 			viewBox1 = wx.BoxSizer()
