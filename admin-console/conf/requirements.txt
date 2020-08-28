@@ -1,0 +1,4 @@
+wxpython
+cron-schedule-triggers
+requests
+cryptography
