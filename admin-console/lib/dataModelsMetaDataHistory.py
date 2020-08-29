@@ -217,6 +217,7 @@ class Main():
 		self.modelText = wx.StaticText(self.ModelHistoryBox, wx.ID_ANY, 'Select Model:')
 		self.modelChoice = wx.Choice(self.ModelHistoryBox, wx.ID_ANY, (120, 50), choices=self.modelList)
 		self.thisPanel.Bind(wx.EVT_CHOICE, self.EvtChooseModel, self.modelChoice)
+
 		## Placeholder for the SnapshotList
 		self.rawSnapshotPanel = RawPanel(self.ModelHistoryBox, wx.ID_ANY)
 		self.snapshotList = None
@@ -228,32 +229,29 @@ class Main():
 		self.rawDataPanel.SetSizer(viewBox1)
 		self.rawDataPanel.Show()
 		self.rawDataPanel.SendSizeEvent()
-		self.resetMainPanel()
-		wx.EndBusyCursor()
 
-
-	def resetMainPanel(self):
-		## Create boxes to arrange the panels
-		mainBox = wx.BoxSizer(wx.HORIZONTAL)
-		mainQueryBox = wx.BoxSizer(wx.VERTICAL)
+		## Draw the panels
+		self.mainBox = wx.BoxSizer(wx.HORIZONTAL)
+		self.mainQueryBox = wx.BoxSizer(wx.VERTICAL)
 		self.thisPanel.Freeze()
 		topBorder, otherBorder = self.ModelHistoryBox.GetBordersForSizer()
-		staticSizer = wx.BoxSizer(wx.VERTICAL)
-		staticSizer.AddSpacer(topBorder)
-		staticSizer.Add(self.modelTypeText, 0, wx.TOP|wx.LEFT, 5)
-		staticSizer.Add(self.modelTypeChoice, 0, wx.EXPAND|wx.ALL, 5)
-		staticSizer.AddSpacer(10)
-		staticSizer.Add(self.modelText, 0, wx.TOP|wx.LEFT, 5)
-		staticSizer.Add(self.modelChoice, 0, wx.EXPAND|wx.ALL, 5)
-		staticSizer.AddSpacer(10)
-		staticSizer.Add(self.rawSnapshotPanel, 1, wx.EXPAND|wx.ALL, 5)
-		self.ModelHistoryBox.SetSizer(staticSizer)
-		mainQueryBox.Add(self.ModelHistoryBox, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.BOTTOM, 5)
-		mainBox.Add(mainQueryBox, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.BOTTOM, 5)
-		mainBox.Add(self.rawDataPanel, 1, wx.EXPAND|wx.TOP, 7)
-		self.thisPanel.SetSizer(mainBox)
+		self.staticSizer = wx.BoxSizer(wx.VERTICAL)
+		self.staticSizer.AddSpacer(topBorder)
+		self.staticSizer.Add(self.modelTypeText, 0, wx.TOP|wx.LEFT, 5)
+		self.staticSizer.Add(self.modelTypeChoice, 0, wx.EXPAND|wx.ALL, 5)
+		self.staticSizer.AddSpacer(10)
+		self.staticSizer.Add(self.modelText, 0, wx.TOP|wx.LEFT, 5)
+		self.staticSizer.Add(self.modelChoice, 0, wx.EXPAND|wx.ALL, 5)
+		self.staticSizer.AddSpacer(10)
+		self.staticSizer.Add(self.rawSnapshotPanel, 1, wx.EXPAND|wx.ALL, 5)
+		self.ModelHistoryBox.SetSizer(self.staticSizer)
+		self.mainQueryBox.Add(self.ModelHistoryBox, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.BOTTOM, 5)
+		self.mainBox.Add(self.mainQueryBox, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.BOTTOM, 5)
+		self.mainBox.Add(self.rawDataPanel, 1, wx.EXPAND|wx.TOP, 7)
+		self.thisPanel.SetSizer(self.mainBox)
 		self.thisPanel.Thaw()
 		self.thisPanel.SendSizeEvent()
+		wx.EndBusyCursor()
 
 
 	def getModels(self):
@@ -302,6 +300,4 @@ class Main():
 		self.rawSnapshotPanel.SetSizer(viewBox1)
 		self.rawSnapshotPanel.Show()
 		self.rawSnapshotPanel.SendSizeEvent()
-
-		self.resetMainPanel()
 		wx.EndBusyCursor()

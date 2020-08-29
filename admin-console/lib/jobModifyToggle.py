@@ -252,15 +252,15 @@ class Main():
 		self.jobConfigBox = wx.StaticBox(self.thisPanel, wx.ID_ANY, 'Job Configuration')
 		## Static texts
 		self.text1 = wx.StaticText(self.jobConfigBox, label="Active: ")
-		self.text2 = wx.StaticText(self.jobConfigBox, label="Created: ")
-		self.text3 = wx.StaticText(self.jobConfigBox, label="Created by: ")
-		self.text4 = wx.StaticText(self.jobConfigBox, label="Updated: ")
-		self.text5 = wx.StaticText(self.jobConfigBox, label="Updated by: ")
+		self.text2 = wx.StaticText(self.jobConfigBox, label="Updated: ")
+		self.text3 = wx.StaticText(self.jobConfigBox, label="Updated by: ")
+		self.text4 = wx.StaticText(self.jobConfigBox, label="Trigger Type: ")
+		self.text5 = wx.StaticText(self.jobConfigBox, label="Trigger Args: ")
 		self.value1 = wx.TextCtrl(self.jobConfigBox, wx.ID_ANY, value=str(dataSet.get('active', '')), size=(500,-1), style=wx.TE_READONLY|wx.EXPAND|wx.BORDER_NONE)
-		self.value2 = wx.TextCtrl(self.jobConfigBox, wx.ID_ANY, value=str(dataSet.get('time_created', '')), size=(500,-1), style=wx.TE_READONLY|wx.EXPAND|wx.BORDER_NONE)
-		self.value3 = wx.TextCtrl(self.jobConfigBox, wx.ID_ANY, value=str(dataSet.get('object_created_by', '')), size=(500,-1), style=wx.TE_READONLY|wx.EXPAND|wx.BORDER_NONE)
-		self.value4 = wx.TextCtrl(self.jobConfigBox, wx.ID_ANY, value=str(dataSet.get('time_updated', '')), size=(500,-1), style=wx.TE_READONLY|wx.EXPAND|wx.BORDER_NONE)
-		self.value5 = wx.TextCtrl(self.jobConfigBox, wx.ID_ANY, value=str(dataSet.get('object_updated_by', '')), size=(500,-1), style=wx.TE_READONLY|wx.EXPAND|wx.BORDER_NONE)
+		self.value2 = wx.TextCtrl(self.jobConfigBox, wx.ID_ANY, value=str(dataSet.get('time_updated', '')), size=(500,-1), style=wx.TE_READONLY|wx.EXPAND|wx.BORDER_NONE)
+		self.value3 = wx.TextCtrl(self.jobConfigBox, wx.ID_ANY, value=str(dataSet.get('object_updated_by', '')), size=(500,-1), style=wx.TE_READONLY|wx.EXPAND|wx.BORDER_NONE)
+		self.value4 = wx.TextCtrl(self.jobConfigBox, wx.ID_ANY, value=str(self.scrubDictOrList(dataSet, 'triggerType')), size=(500,-1), style=wx.TE_READONLY|wx.EXPAND|wx.BORDER_NONE)
+		self.value5 = wx.TextCtrl(self.jobConfigBox, wx.ID_ANY, value=str(self.scrubDictOrList(dataSet, 'triggerArgs')), size=(500,-1), style=wx.TE_READONLY|wx.EXPAND|wx.BORDER_NONE)
 
 		## Buttons
 		self.enableButton = wx.Button(self.jobConfigBox, wx.ID_ANY, 'Enable job')
@@ -305,10 +305,10 @@ class Main():
 		self.jobConfigSizerV.Add(self.dataSizer5, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 5)
 
 		self.jobConfigSizerV.AddSpacer(10)
-		self.dataSizer6 = wx.BoxSizer(wx.HORIZONTAL)
-		self.dataSizer6.Add(self.enableButton, 0, wx.LEFT|wx.RIGHT, 10)
-		self.dataSizer6.Add(self.disableButton, 0, wx.LEFT|wx.RIGHT, 10)
-		self.jobConfigSizerV.Add(self.dataSizer6, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 5)
+		self.dataSizerButton = wx.BoxSizer(wx.HORIZONTAL)
+		self.dataSizerButton.Add(self.enableButton, 0, wx.LEFT|wx.RIGHT, 10)
+		self.dataSizerButton.Add(self.disableButton, 0, wx.LEFT|wx.RIGHT, 10)
+		self.jobConfigSizerV.Add(self.dataSizerButton, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 5)
 		self.jobConfigSizerV.AddSpacer(10)
 
 		if self.text6 is not None:
@@ -352,9 +352,32 @@ class Main():
 		self.thisPanel.SendSizeEvent()
 		self.logger.debug('Stop resetMainPanel')
 
+
 	def getServices(self):
 		self.services = ['contentGathering', 'universalJob']
 		self.serviceType = self.services[0]
+
+
+	def scrubDictOrList(self, dataSet, attr):
+		source = dataSet.get('content', {})
+		entry = source.get(attr)
+		if entry is None or entry == '':
+			return None
+		if isinstance(entry, dict):
+			cleanDict = {}
+			for key,value in entry.items():
+				if value is None or value == '':
+					continue
+				cleanDict[key] = value
+			return cleanDict
+		if isinstance(entry, list):
+			cleanList = []
+			for value in entry:
+				if value is None or value == '':
+					continue
+				cleanList.append(value)
+			return cleanList
+		return entry
 
 
 	def getJobsForThisService(self):

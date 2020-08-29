@@ -375,7 +375,7 @@ class Main():
 		self.jobFilterBox = wx.StaticBox(self.thisPanel, wx.ID_ANY, 'Job Schedules')
 		self.rb = wx.RadioBox(self.jobFilterBox, wx.ID_ANY, 'Data set', wx.DefaultPosition, wx.DefaultSize, ['Historical', 'Projected'], 1, wx.RA_SPECIFY_COLS)
 		self.thisPanel.Bind(wx.EVT_RADIOBOX, self.EvtRadioBox, self.rb)
-		self.rb.SetToolTip(wx.ToolTip('Historical shows past data. Projected shows actively scheduled jobs with projected runtimes based off past executions.'))
+		self.rb.SetToolTip(wx.ToolTip('Historical shows past data. Projected shows actively scheduled jobs with projected runtimes derived from past executions.'))
 		self.serviceText = wx.StaticText(self.jobFilterBox, wx.ID_ANY, 'Select Service:')
 		self.serviceChoice = wx.Choice(self.jobFilterBox, wx.ID_ANY, (120, 50), choices=self.services)
 		self.thisPanel.Bind(wx.EVT_CHOICE, self.EvtChooseServiceType, self.serviceChoice)
@@ -729,6 +729,7 @@ class Main():
 
 	def EvtChooseServiceType(self, event):
 		self.serviceType = event.GetString()
+		self.getJobSchedules()
 		self.getHistoricalDataSet()
 		self.getProjectedDataSet()
 		self.resetMainPanel(False)
