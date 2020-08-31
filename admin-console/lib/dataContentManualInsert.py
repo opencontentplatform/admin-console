@@ -5,53 +5,33 @@ import logging, logging.handlers
 from contextlib import suppress
 
 import wx
-import wx.lib.mixins.listctrl as listmix
-import wx.lib.agw.genericmessagedialog as GMD
-import wx.html2
-from wx.lib.pubsub import pub
-## pip install pysubpub
-#from subpub import sub, pub
 
 
 class Page2(wx.Panel):
-	def __init__(self, parent, logger, onNextPage, onBackPage, page1, data, api):
+	def __init__(self, parent, logger, objectType, data, api):
 		wx.Panel.__init__(self, parent)
+		self.parent = parent
 		self.logger = logger
 		self.data = data
 		self.api = api
-		self.onNextPage = onNextPage
-		self.onBackPage = onBackPage
-		#self.realms = self.data['realms']
+		self.objectType = objectType
 		self.SetBackgroundColour('white')
 		self.ctrlTracker = {}
 		self.boolValue = True
 		self.listValue = None
-		self.objectType = self.data['objectType']
-		self.objectDefinition = self.data['objects'][self.objectType]
+		self.objectDefinition = self.data['objects'].get(self.objectType, {})
+		self.loadPage()
 
-		## pubsub stuff
-		pub.subscribe(self.__onObjectSelection, 'object.definition')
 
-	def __onObjectSelection(self, objType, objDef=None):
-		self.logger.debug('Page2: __onObjectSelection: received objType {} and objDef {}'.format(objType, objDef))
-		self.objectType = objType
-		self.objectDefinition = objDef
-		if objDef is None:
-			self.objectDefinition = {}
-
+	def loadPage(self):
+		self.logger.debug('Page2: __onObjectSelection: received objType {} and objDef {}'.format(self.objectType, self.objectDefinition))
 		mainBox = wx.BoxSizer(wx.HORIZONTAL)
 		mainBox.AddSpacer(60)
 		vbox = wx.BoxSizer(wx.VERTICAL)
 		vbox.AddSpacer(20)
 
 		self.logger.debug(' Page2 objectType from page1: {}'.format(self.objectType))
-		label = 'Manually insert an object'
-		## Let's be grammatically correct
-		if self.objectType in ['IpAddress']:
-			label = 'Manually insert an {} object'.format(self.objectType)
-		else:
-			label = 'Manually insert a {} object'.format(self.objectType)
-
+		label = 'Manually insert object type: {}'.format(self.objectType)
 		banner = wx.StaticText(self, label=label)
 		f = banner.GetFont()
 		f.SetPointSize(f.GetPointSize()+6)
@@ -119,6 +99,7 @@ class Page2(wx.Panel):
 		mainBox.Add(vbox, 1, wx.EXPAND|wx.RIGHT, 60)
 		self.SetSizer(mainBox)
 
+
 	def onInsert(self, event=None):
 		self.logger.debug('Attempting to construct object for manual insert')
 		jsonObject = {}
@@ -128,13 +109,10 @@ class Page2(wx.Panel):
 			thisControl = self.ctrlTracker.get(attrName)
 			thisValue = None
 			if isinstance(attrType, str):
-				#self.logger.debug('    ... found string')
 				thisValue = thisControl.GetValue()
 			elif isinstance(attrType, bool):
-				#self.logger.debug('    ... found boolean')
 				thisValue = self.boolValue
 			elif isinstance(attrType, list):
-				#self.logger.debug('    ... found list')
 				thisValue = self.listValue
 			else:
 				continue
@@ -164,24 +142,23 @@ class Page2(wx.Panel):
 			dlgResult.ShowModal()
 			dlgResult.Destroy()
 
+
 	def clearPanel(self):
 		for attrName,attrType in self.objectDefinition.items():
-			self.logger.debug(' ===> clearing out {} : {}'.format(attrName, attrType))
+			self.logger.debug(' clearing out {} : {}'.format(attrName, attrType))
 			thisControl = self.ctrlTracker.get(attrName)
 			thisValue = None
 			if isinstance(attrType, str):
-				self.logger.debug('    ===> found string')
 				thisControl.Clear()
 			elif isinstance(attrType, bool):
-				self.logger.debug('    ===> found boolean')
 				thisControl.SetSelection(0)
 				self.boolValue = True
 			elif isinstance(attrType, list):
-				self.logger.debug('    ===> found list')
 				thisControl.SetSelection(0)
 				self.listValue = attrType[0]
 			else:
 				continue
+
 
 	def EvtChooseBool(self, event):
 		selection = event.GetString()
@@ -198,14 +175,12 @@ class Page2(wx.Panel):
 
 
 class Page1(wx.Panel):
-	def __init__(self, parent, logger, onNextPage, data):
+	def __init__(self, parent, logger, mainPanelRef):
 		wx.Panel.__init__(self, parent)
 		self.logger = logger
-		self.onNextPage = onNextPage
-		self.data = data
+		self.owner = mainPanelRef
 		self.SetBackgroundColour('white')
-		self.objectTypes = list(self.data.get('objects', {}).keys())
-		self.objectType = self.objectTypes[0]
+		self.objectTypes = list(self.owner.data.get('objects', {}).keys())
 
 		mainBox = wx.BoxSizer(wx.HORIZONTAL)
 		mainBox.AddSpacer(60)
@@ -256,44 +231,88 @@ class Page1(wx.Panel):
 		mainBox.Add(vbox, 1, wx.EXPAND|wx.RIGHT, 60)
 		self.SetSizer(mainBox)
 
+
 	def EvtChooseEnabled(self, event):
-		self.objectType = event.GetString()
-		#self.data['objectType'] = objectType
-		self.logger.debug('Object type selected: {}'.format(self.objectType))
-		pub.sendMessage('object.definition', objType=self.objectType, objDef=self.data.get('objects', {}).get(self.objectType))
-		self.onNextPage(event)
-		#pub('objectDefinition', self.objectType, self.data.get('objects', {}).get(self.objectType))
+		objectType = event.GetString()
+		self.owner.objectType = objectType
+		self.logger.debug('Object type selected: {}'.format(objectType))
+		self.owner.resetMainPanel()
 
 
-class InsertObjectBook(wx.Simplebook):
-	def __init__(self, parent, log, api):
-		wx.Simplebook.__init__(self, parent)
-		self.showEffect = wx.SHOW_EFFECT_NONE
-		self.hideEffect = wx.SHOW_EFFECT_NONE
-		self.showTimeout = 0
-		self.hideTimeout = 0
+class RawPanel(wx.Panel):
+	def __init__(self, parent, log):
+		wx.Panel.__init__(self, parent, wx.ID_ANY, wx.DefaultPosition, style=wx.EXPAND|wx.CLIP_CHILDREN, name="rawPanel")
+		self.Layout()
+	def Freeze(self):
+		if 'wxMSW' in wx.PlatformInfo:
+			return super(RawPanel, self).Freeze()
+	def Thaw(self):
+		if 'wxMSW' in wx.PlatformInfo:
+			return super(RawPanel, self).Thaw()
+
+
+class Main():
+	def __init__(self, thisPanel, log, api):
 		self.logger = log
 		self.api = api
+		self.thisPanel = thisPanel
+
 		self.data = {}
+		self.objectType = None
+		self.realms = []  ## needed at least for IPs
 		self.getRealms()
 		self.getObjectDefinitions()
-		self.data['objectType'] = list(self.data['objects'].keys())[0]
-		self.DoSetEffects()
-		page1 = Page1(self, self.logger, self.OnNextPage, self.data)
-		self.AddPage(page1, '')
-		page2 = Page2(self, self.logger, self.OnNextPage, self.OnBackPage, page1, self.data, self.api)
-		self.AddPage(page2, '')
+
+		self.thisPanel.Freeze()
+		## Placeholder for sizers; actual page to be created in resetMainPanel
+		self.page = RawPanel(self.thisPanel, wx.ID_ANY)
+
+		self.mainBox = wx.BoxSizer()
+		self.mainBox.Add(self.page, 1, wx.EXPAND|wx.ALL, 5)
+		self.thisPanel.Layout()
+		self.thisPanel.SetSizer(self.mainBox)
+		self.thisPanel.Show()
+		self.thisPanel.SendSizeEvent()
+		self.thisPanel.Thaw()
+		wx.EndBusyCursor()
+
+		## Layout complete; now update the page with contents
+		self.resetMainPanel(True)
+
+
+	def resetMainPanel(self, showLandingPage=False):
+		wx.BeginBusyCursor()
+		self.thisPanel.Freeze()
+
+		## Cleanup previous data set
+		self.mainBox.Detach(self.page)
+		self.page.Destroy()
+		self.page = None
+
+		## Replace the page
+		if showLandingPage:
+			self.page = Page1(self.thisPanel, self.logger, self)
+		else:
+			self.page = Page2(self.thisPanel, self.logger, self.objectType, self.data, self.api)
+		self.mainBox.Add(self.page, 1, wx.EXPAND|wx.ALL, 5)
+		self.mainBox.Layout()
+		self.thisPanel.SetSizer(self.mainBox)
+		self.thisPanel.Thaw()
+		self.thisPanel.SendSizeEvent()
+		wx.EndBusyCursor()
+		self.logger.debug('Stop resetMainPanel')
 
 
 	def getRealms(self):
 		apiResults = self.api.getResource('config/Realm')
 		self.data['realms'] = []
-		self.realms = []
 		for name in apiResults.get('realms', {}):
 			self.data['realms'].append(name)
 			self.realms.append(name)
 
+
 	def getObjectDefinitions(self):
+		## TODO: instead of static defs here, get these dynamically via API call
 		self.data['objects'] = {
 			'IpAddress': {
 				'address': str(),
@@ -335,77 +354,3 @@ class InsertObjectBook(wx.Simplebook):
 				'short_name': str()
 			}
 		}
-
-	def MakeBackHomeButton(self, panel, vbox):
-		btn = wx.Button(panel, -1, 'Back to page 1')
-		self.Bind(wx.EVT_BUTTON, self.OnBackHome, btn)
-		vbox.AddSpacer(75)
-		vbox.Add(btn)
-
-
-	def OnNextPage(self, evt):
-		current = self.GetSelection()
-		current += 1
-		if current >= self.GetPageCount():
-			current = 0
-		self.ChangeSelection(current)
-
-	def OnBackPage(self, evt):
-		current = self.GetSelection()
-		current -= 1
-		if current < 0:
-			current = 0
-		self.ChangeSelection(current)
-
-	def OnBackHome(self, evt):
-		self.ChangeSelection(0)
-
-	def OnShowEffectChoice(self, evt):
-		self.showEffect = eval(evt.GetString())
-		self.DoSetEffects()
-
-	def OnHideEffectChoice(self, evt):
-		self.hideEffect = eval(evt.GetString())
-		self.DoSetEffects()
-
-	def OnShowTimeoutSpin(self, evt):
-		self.showTimeout = evt.GetEventObject().GetValue()
-		self.DoSetEffects()
-
-	def OnHideTimeoutSpin(self, evt):
-		self.hideTimeout = evt.GetEventObject().GetValue()
-		self.DoSetEffects()
-
-	def DoSetEffects(self):
-		self.SetEffects(self.showEffect, self.hideEffect)
-		self.SetEffectsTimeouts(self.showTimeout, self.hideTimeout)
-
-
-class RawPanel(wx.Panel):
-	def __init__(self, parent, log):
-		#wx.Panel.__init__(self, parent, wx.ID_ANY, wx.DefaultPosition, size=(780, 920), style=wx.EXPAND|wx.CLIP_CHILDREN, name="rawPanel")
-		wx.Panel.__init__(self, parent, wx.ID_ANY, wx.DefaultPosition, style=wx.EXPAND|wx.CLIP_CHILDREN, name="rawPanel")
-		self.Layout()
-	def Freeze(self):
-		if 'wxMSW' in wx.PlatformInfo:
-			return super(RawPanel, self).Freeze()
-	def Thaw(self):
-		if 'wxMSW' in wx.PlatformInfo:
-			return super(RawPanel, self).Thaw()
-
-
-class Main():
-	def __init__(self, thisPanel, log, api):
-		self.logger = log
-		self.api = api
-		self.thisPanel = thisPanel
-
-		book = InsertObjectBook(thisPanel, self.logger, self.api)
-		mainBox = wx.BoxSizer()
-		mainBox.Add(book, 1, wx.EXPAND)
-
-		thisPanel.Layout()
-		thisPanel.SetSizer(mainBox)
-		thisPanel.Show()
-		thisPanel.SendSizeEvent()
-		wx.EndBusyCursor()
