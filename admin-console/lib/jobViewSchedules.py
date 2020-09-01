@@ -604,6 +604,8 @@ class Main():
 		## Day-of-Week defaults to ?
 		value = triggerArgs.get('day_of_week')
 		if value is not None and value != '':
+			## Note: this is changed for the next version, so APS adhears to 1-7,
+			## but up through version 3.6.3, required this conversion...
 			## Conversion: str|int 0-6 mon-sun for APS, str|int 1-7 sun-sat for Quartz
 			day_of_week = dayOfWeekConversionFromApsToQuartz(triggerArgs['day_of_week'])
 

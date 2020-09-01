@@ -580,9 +580,10 @@ class Main():
 				tmpList = jobName.split('.')
 				pkgName = tmpList[0]
 				shortName = tmpList[1]
-			if pkgName not in self.packageList:
-				self.packageList[pkgName] = {}
-			self.packageList[pkgName][shortName] = jobName
+				if pkgName not in self.packageList:
+					self.packageList[pkgName] = {}
+				if shortName not in self.packageList[pkgName]:
+					self.packageList[pkgName][shortName] = jobName
 
 			jobResults = self.api.getResource('job/runtime/{}/{}'.format(self.serviceType, jobName))
 			## The result is a dictionary with the keys being endpoints (IPs)
