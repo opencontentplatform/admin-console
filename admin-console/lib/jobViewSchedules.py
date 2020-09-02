@@ -534,7 +534,15 @@ class Main():
 			## JSON rendering in web looks like [object Object], so remove these:
 			result.pop('count_per_client')
 			result.pop('count_per_status')
-			self.historicalData[jobName].append(result)
+			## If any of the following fields are null, it stops the javascript
+			requiredFields = ['time_started', 'time_finished', 'time_elapsed']
+			dropData = False
+			for field in requiredFields:
+				if result.get(field) is None:
+					dropData = True
+					break
+			if not dropData:
+				self.historicalData[jobName].append(result)
 		## Get an average runtime from successful runs in this timeframe; to be
 		## used in the projected functions
 		for jobName,resultList in self.historicalData.items():
