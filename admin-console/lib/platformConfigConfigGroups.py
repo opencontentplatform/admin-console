@@ -302,8 +302,9 @@ class Main():
 		self.mainBox.Add(self.mainQueryBox, 0, wx.TOP|wx.LEFT|wx.BOTTOM, 5)
 		self.mainBox.Add(self.textCtrl, 1, wx.EXPAND|wx.ALL, 15)
 		self.thisPanel.SetSizer(self.mainBox)
-		self.listPanel.setCurrentItem()
+		#self.listPanel.setCurrentItem()
 		self.logger.debug('Main.init: 3')
+		self.resetMainPanel()
 
 		wx.EndBusyCursor()
 
