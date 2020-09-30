@@ -67,7 +67,8 @@ class SimpleQueryListView(wx.Panel):
 	def getPage(self, queryName):
 		apiResults = self.api.getResource('query/simple/{}'.format(queryName))
 		if len(apiResults) > 0:
-			self.webPageContent = mapViewData(apiResults)
+			## Convert so Python values are understood ('None' -> 'null', True -> true, etc)
+			self.webPageContent = mapViewData(json.dumps(apiResults))
 		with open(self.cachedPage, 'w') as out:
 			out.write(self.webPageContent)
 		self.logger.debug('Web page to load:\n{}'.format(self.webPageContent))

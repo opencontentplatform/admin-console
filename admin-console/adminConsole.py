@@ -66,7 +66,8 @@ def verifyBrowserEmulation(osType):
 		print('Checking browser emulation setting in registry')
 		import winreg
 		try:
-			fileName = 'python.exe'
+			#fileName = 'python.exe'
+			fileName = os.path.basename(sys.executable)
 			key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Software\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_BROWSER_EMULATION")
 			result = winreg.QueryValueEx(key, fileName)
 			print('Key already found with value: {}. Leaving key unchanged.'.format(result))

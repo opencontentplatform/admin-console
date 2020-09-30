@@ -6,7 +6,6 @@
 
 
 function exec(jsonData) {
-	console.log('OCP TREE: ', jsonData)
 	// Set the dimensions and margins of the diagram
 	var margin = {top: 35, right: 90, bottom: 30, left: 90},
 		width = 1024 - margin.left - margin.right,

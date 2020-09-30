@@ -537,7 +537,10 @@ def main():
 		logger.info('Connecting to OCP')
 		settings = loadSettings(os.path.join(env.configPath, 'ocpSettings.json'))
 		logger.debug('settings: {}'.format(settings))
-		restApi = ocpRestAPI.RestAPI(settings['restEndpoint'], settings['restProtocol'], settings['restPort'], settings['restPath'], settings['apiUser'], settings['apiKey'])
+		verify = False
+		if settings.get('restProtocol', 'http').lower() == 'https':
+			verify = os.path.join(env.configPath, settings.get('ocpCertificateFile'))
+		restApi = ocpRestAPI.RestAPI(settings['restEndpoint'], settings['restProtocol'], settings['restPort'], settings['restPath'], settings['apiUser'], settings['apiKey'], verify)
 		#app = wx.App(redirect=True, filename="F:\\Work\\openContentPlatform\\adminConsole\\log\\logfile.log")
 		#app = wx.App(redirect=True)
 		app = wx.App()
