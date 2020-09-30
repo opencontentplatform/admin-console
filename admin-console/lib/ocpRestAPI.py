@@ -11,7 +11,7 @@ logger = logging.getLogger("ocpRestAPI")
 class RestAPI():
 	"""Protocol type wrapper for the OCP REST API."""
 
-	def __init__(self, restEndpoint, protocol, port, context, apiUser, apiKey):
+	def __init__(self, restEndpoint, protocol, port, context, apiUser, apiKey, verify=False):
 		"""Constructor."""
 		self.token = None
 		self.baseURL = '{}://{}:{}/{}'.format(protocol, restEndpoint, port, context)
@@ -21,6 +21,7 @@ class RestAPI():
 		self.header['Content-Type'] = 'application/json'
 		self.header['ApiUser'] = self.apiUser
 		self.header['ApiKey'] = self.apiKey
+		self.verify = verify
 		self.establishConnection()
 
 
@@ -32,7 +33,7 @@ class RestAPI():
 		## Set the headers
 		self.header['ResultsFormat'] = 'Nested-Simple'
 		## Issue a POST call to URL for token generation
-		apiResponse = requests.get(testUrl, data=payloadAsString, headers=self.header, verify=False)
+		apiResponse = requests.get(testUrl, data=payloadAsString, headers=self.header, verify=self.verify)
 		responseAsJson =  json.loads(apiResponse.text)
 		if int(apiResponse.status_code) != 200:
 			logger.debug('Response code: {}'.format(apiResponse.status_code))
@@ -56,7 +57,7 @@ class RestAPI():
 			customHeaders = self.header.copy()
 			customHeaders['ResultsFormat'] = 'Flat'
 			## Issue a GET call to URL
-			apiResponse = requests.get(urlForCiQuery, data=payloadAsString, headers=customHeaders, verify=False)
+			apiResponse = requests.get(urlForCiQuery, data=payloadAsString, headers=customHeaders, verify=self.verify)
 			if int(apiResponse.status_code) != 200:
 				logger.debug('Response code: {}'.format(apiResponse.status_code))
 				logger.debug('Response: {}'.format(apiResponse.text))
@@ -82,7 +83,7 @@ class RestAPI():
 			customHeaders['removeEmptyAttributes'] = 'False'
 			customHeaders['resultsFormat'] = 'Flat'
 			## Issue a GET call to URL
-			apiResponse = requests.get(urlForCiQuery, data=payloadAsString, headers=customHeaders, verify=False)
+			apiResponse = requests.get(urlForCiQuery, data=payloadAsString, headers=customHeaders, verify=self.verify)
 			if int(apiResponse.status_code) != 200:
 				logger.debug('Response code: {}'.format(apiResponse.status_code))
 				logger.debug('Response: {}'.format(apiResponse.text))
@@ -109,7 +110,7 @@ class RestAPI():
 			customHeaders = self.header.copy()
 			customHeaders['resultsFormat'] = 'Flat'
 			## Issue a GET call to URL
-			apiResponse = requests.get(urlForCiQuery, data=payloadAsString, headers=customHeaders, verify=False)
+			apiResponse = requests.get(urlForCiQuery, data=payloadAsString, headers=customHeaders, verify=self.verify)
 			if int(apiResponse.status_code) != 200:
 				logger.debug('Response code: {}'.format(apiResponse.status_code))
 				logger.debug('Response: {}'.format(apiResponse.text))
@@ -131,7 +132,7 @@ class RestAPI():
 			customHeaders = self.header.copy()
 			customHeaders['resultsFormat'] = 'Flat'
 			## Issue a POST call to URL
-			apiResponse = requests.post(urlForCiQuery, data=payloadAsString, headers=customHeaders, verify=False)
+			apiResponse = requests.post(urlForCiQuery, data=payloadAsString, headers=customHeaders, verify=self.verify)
 			if int(apiResponse.status_code) != 200:
 				logger.debug('Response code: {}'.format(apiResponse.status_code))
 				logger.debug('Response: {}'.format(apiResponse.text))
@@ -159,7 +160,7 @@ class RestAPI():
 			customHeaders = self.header.copy()
 			customHeaders['resultsFormat'] = 'Flat'
 			## Issue a POST call to URL
-			apiResponse = requests.post(urlForCiQuery, data=payloadAsString, headers=customHeaders, verify=False)
+			apiResponse = requests.post(urlForCiQuery, data=payloadAsString, headers=customHeaders, verify=self.verify)
 			if int(apiResponse.status_code) != 200:
 				logger.debug('Response code: {}'.format(apiResponse.status_code))
 				logger.debug('Response: {}'.format(apiResponse.text))
@@ -187,7 +188,7 @@ class RestAPI():
 			customHeaders = self.header.copy()
 			customHeaders['resultsFormat'] = 'Flat'
 			## Issue a PUT call to URL
-			apiResponse = requests.put(urlForCiQuery, data=payloadAsString, headers=customHeaders, verify=False)
+			apiResponse = requests.put(urlForCiQuery, data=payloadAsString, headers=customHeaders, verify=self.verify)
 			if int(apiResponse.status_code) != 200:
 				logger.debug('Response code: {}'.format(apiResponse.status_code))
 				logger.debug('Response: {}'.format(apiResponse.text))
@@ -208,7 +209,7 @@ class RestAPI():
 			logger.info("Calling url in ocpRestAPI.deleteResource: {}".format(urlForCiQuery))
 			payloadAsString = json.dumps({})
 			## Issue a POST call to URL
-			apiResponse = requests.delete(urlForCiQuery, data=payloadAsString, headers=self.header, verify=False)
+			apiResponse = requests.delete(urlForCiQuery, data=payloadAsString, headers=self.header, verify=self.verify)
 			if int(apiResponse.status_code) != 200:
 				logger.debug('Response code: {}'.format(apiResponse.status_code))
 				logger.debug('Response: {}'.format(apiResponse.text))
@@ -235,7 +236,7 @@ class RestAPI():
 			logger.debug('payloadAsString: {}'.format(payloadAsString))
 
 			## Issue a GET call to URL
-			apiResponse = requests.get(urlForCiQuery, data=payloadAsString, headers=customHeaders, verify=False)
+			apiResponse = requests.get(urlForCiQuery, data=payloadAsString, headers=customHeaders, verify=self.verify)
 			if int(apiResponse.status_code) == 401 and retryFlag is False:
 				## Token expired; need to re-authenticate
 				self.establishConnection()
@@ -265,7 +266,7 @@ class RestAPI():
 			logger.debug('payloadAsString: {}'.format(payloadAsString))
 
 			## Issue a GET call to URL
-			apiResponse = requests.get(urlForCiQuery, data=payloadAsString, headers=customHeaders, verify=False)
+			apiResponse = requests.get(urlForCiQuery, data=payloadAsString, headers=customHeaders, verify=self.verify)
 			if int(apiResponse.status_code) == 401 and retryFlag is False:
 				## Token expired; need to re-authenticate
 				self.establishConnection()
@@ -295,7 +296,7 @@ class RestAPI():
 			logger.debug('payloadAsString: {}'.format(payloadAsString))
 
 			## Issue a GET call to URL
-			apiResponse = requests.get(urlForCiQuery, data=payloadAsString, headers=customHeaders, verify=False)
+			apiResponse = requests.get(urlForCiQuery, data=payloadAsString, headers=customHeaders, verify=self.verify)
 			responseCode = apiResponse.status_code
 			if int(responseCode) == 401 and retryFlag is False:
 				## Token expired; need to re-authenticate
@@ -325,7 +326,7 @@ class RestAPI():
 			logger.debug('payloadAsString: {}'.format(payloadAsString))
 
 			## Issue a GET call to URL
-			apiResponse = requests.get(urlForCiQuery, data=payloadAsString, headers=customHeaders, verify=False)
+			apiResponse = requests.get(urlForCiQuery, data=payloadAsString, headers=customHeaders, verify=self.verify)
 			if int(apiResponse.status_code) == 401 and retryFlag is False:
 				## Token expired; need to re-authenticate
 				self.establishConnection()
@@ -348,7 +349,7 @@ class RestAPI():
 		try:
 			urlForCiQuery = '{}/dataModel/ci/{}'.format(self.baseURL, identifier)
 			## Issue a PUT call to URL
-			apiResponse = requests.put(urlForCiQuery, data=payloadAsString, headers=self.header, verify=False)
+			apiResponse = requests.put(urlForCiQuery, data=payloadAsString, headers=self.header, verify=self.verify)
 			if int(apiResponse.status_code) == 401 and retryFlag is False:
 				## Token expired; need to re-authenticate
 				self.establishConnection()
@@ -371,7 +372,7 @@ class RestAPI():
 			urlForCiQuery = '{}/dataModel/ci/{}'.format(self.baseURL, identifier)
 			logger.debug('urlForCiQuery: {}'.format(urlForCiQuery))
 			## Issue a DELETE call to URL; no payload required
-			apiResponse = requests.delete(urlForCiQuery, headers=self.header, verify=False)
+			apiResponse = requests.delete(urlForCiQuery, headers=self.header, verify=self.verify)
 			if int(apiResponse.status_code) == 401 and retryFlag is False:
 				logger.debug('Response code: {}'.format(apiResponse.status_code))
 				logger.debug('Response: {}'.format(apiResponse.text))
@@ -399,7 +400,7 @@ class RestAPI():
 			logger.debug('payloadAsString: {}'.format(payloadAsString))
 
 			## Issue a GET call to URL
-			apiResponse = requests.post(urlForCiQuery, data=payloadAsString, headers=self.header, verify=False)
+			apiResponse = requests.post(urlForCiQuery, data=payloadAsString, headers=self.header, verify=self.verify)
 			if int(apiResponse.status_code) == 401 and retryFlag is False:
 				## Token expired; need to re-authenticate
 				logger.debug('Response code: {}  Message:'.format(apiResponse.status_code, apiResponse.text))

@@ -23,23 +23,6 @@ function exec(jsonData) {
 		.attr("data-html", "true")
 		.style("opacity", 1e-6);
 
-	//// Added rectangle so zoom & pan work on white space too
-	//svg.append("rect")
-	//	.attr("class", "overlay")
-	//	.attr("width", width)
-	//	.attr("height", height);
-	//
-	//// Add encompassing group for the viewpane
-	//var viewpane = svg.append("g");
-	//
-	//// Zoom capabilities
-	//svg.call(d3.zoom()
-	//		.scaleExtent([0.25, 2.0])
-	//		.on("zoom", zoomed));
-	//function zoomed() {
-	//	viewpane.attr("transform", d3.event.transform);
-	//}
-
 	// Need to use "first_id" and "second_id" for links instead of D3's default
 	// attributes "source" and "target"
 	jsonData.links.forEach(function(d){
@@ -49,7 +32,7 @@ function exec(jsonData) {
 		}
 	);
 
-	//add zoom capabilities
+	// Add zoom capabilities
 	var zoom_handler = d3.zoom()
 		.on("zoom", zoom_actions);
 	zoom_handler(svg);
@@ -192,8 +175,6 @@ function exec(jsonData) {
 		.attr("height", 40)
 		.attr("x", 10)
 		.attr("y", 10);
-		//icons8-hierarchy-100
-		//icons8-camera-addon-identification-100
 
 		defs.append('pattern')
 		.attr("id", "port")
@@ -253,7 +234,6 @@ function exec(jsonData) {
 
 
 	// Setup the simulation and add forces
-	//var simulation = d3.forceSimulation()
 	var simulation = d3.forceSimulation(jsonData.objects)
 		.force("charge_force", d3.forceManyBody().strength(-100))
 		.force("colide_force", d3.forceCollide().radius(50))
@@ -332,7 +312,7 @@ function exec(jsonData) {
 		}
 	}
 
-	//add encompassing group for the zoom
+	// Add group for the zoom
 	var g = svg.append("g")
 		.attr("class", "everything");
 
@@ -345,7 +325,6 @@ function exec(jsonData) {
 
 
 	var node = g.selectAll()
-		//.data(jsonData.nodes)
 		.data(jsonData.objects, function(d) {return d.identifier;})
 		.enter()
 		.append("g")
@@ -367,8 +346,8 @@ function exec(jsonData) {
 		.on("mousemove", function(d) {mousemove(d);})
 		.on("mouseout", mouseout);
 
-	// need to float labels
-	var texts = node.append("text")
+	// Float labels
+	node.append("text")
 		.style("fill", "black")
 		.style("font", "14px sans-serif")
 		.attr("dx", -30)

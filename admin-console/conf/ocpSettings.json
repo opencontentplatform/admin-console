@@ -4,5 +4,6 @@
     "restPort":"52707",
     "restPath":"ocp",
     "apiUser":"changeMe",
-    "apiKey":"5230efc21831423dab3cc7ff35bd5251"
+    "apiKey":"5230efc21831423dab3cc7ff35bd5251",
+    "ocpCertificateFile" : "server_cert_public.pem"
 }
