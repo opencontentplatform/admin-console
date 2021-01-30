@@ -27,8 +27,26 @@ def getStaticListForType(protocolType, credHeaders):
 	elif protocolType == 'rest':
 		orderedList = ['id', 'user', 'realm', 'credential_group', 'description', 'time_created', 'object_created_by', 'time_updated', 'object_updated_by']
 		staticHeaders = ['id', 'user', 'realm', 'credential group', 'description', 'created', 'created by', 'last updated', 'updated by']
+	elif protocolType == 'postgres':
+		orderedList = ['id', 'user', 'realm', 'credential_group', 'description', 'time_created', 'object_created_by', 'time_updated', 'object_updated_by']
+		staticHeaders = ['id', 'user', 'realm', 'credential group', 'description', 'created', 'created by', 'last updated', 'updated by']
+	elif protocolType == 'mssql':
+		orderedList = ['id', 'user', 'realm', 'credential_group', 'description', 'time_created', 'object_created_by', 'time_updated', 'object_updated_by']
+		staticHeaders = ['id', 'user', 'realm', 'credential group', 'description', 'created', 'created by', 'last updated', 'updated by']
+	elif protocolType == 'oracle':
+		orderedList = ['id', 'user', 'realm', 'credential_group', 'description', 'time_created', 'object_created_by', 'time_updated', 'object_updated_by']
+		staticHeaders = ['id', 'user', 'realm', 'credential group', 'description', 'created', 'created by', 'last updated', 'updated by']
+	elif protocolType == 'mariadb':
+		orderedList = ['id', 'user', 'realm', 'credential_group', 'description', 'time_created', 'object_created_by', 'time_updated', 'object_updated_by']
+		staticHeaders = ['id', 'user', 'realm', 'credential group', 'description', 'created', 'created by', 'last updated', 'updated by']
+	elif protocolType == 'mysql':
+		orderedList = ['id', 'user', 'realm', 'credential_group', 'description', 'time_created', 'object_created_by', 'time_updated', 'object_updated_by']
+		staticHeaders = ['id', 'user', 'realm', 'credential group', 'description', 'created', 'created by', 'last updated', 'updated by']
+	elif protocolType == 'db2':
+		orderedList = ['id', 'user', 'realm', 'credential_group', 'description', 'time_created', 'object_created_by', 'time_updated', 'object_updated_by']
+		staticHeaders = ['id', 'user', 'realm', 'credential group', 'description', 'created', 'created by', 'last updated', 'updated by']
 	else:
-		raise EnvironmentError('TODO: Protocol type not instrmented')
+		raise EnvironmentError('TODO: Protocol type not instrumented')
 	## Don't overwrite; reuse the header structure
 	credHeaders.clear()
 	for header in staticHeaders:
