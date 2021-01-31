@@ -1,5 +1,5 @@
 {
-    "restEndpoint":"localhost",
+    "restEndpoint":"127.0.0.1",
     "restProtocol":"http",
     "restPort":"52707",
     "restPath":"ocp",
